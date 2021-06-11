@@ -5,6 +5,7 @@ import { useAppContext } from '../../context';
 import OutputContainer from './Output';
 import { Nav, Addressbar, Address } from './Nav';
 import Iframe from './Iframe';
+import ConvertArrToString from '../../utils/convertArrtoString';
 
 interface Props {
   id: string;
@@ -13,32 +14,29 @@ interface Props {
 const Output: FC<Props> = ({ id }) => {
   const { filesData } = useAppContext();
   const iFrameRef = useRef<HTMLIFrameElement>(null);
+  const { allFilesHTMLCombined, allFilesCSSCombined, allFilesJSCombined } =
+    ConvertArrToString(filesData);
 
   useEffect(() => {
     const outputIframeDocument = (iFrameRef.current as HTMLIFrameElement).contentWindow?.document;
-
-    // prettier-ignore
-    const allFilesHTML = filesData.filter(({ language }) => language === 'html' || language === 'htm');
-    const allFilesCSS = filesData.filter(({ language }) => language === 'css');
-    const allFilesJS = filesData.filter(({ language }) => language === 'javascript');
 
     if (outputIframeDocument) {
       outputIframeDocument.body.innerHTML = '';
 
       // Append HTML to iFrame
-      outputIframeDocument.body.innerHTML += allFilesHTML[0].value;
+      outputIframeDocument.body.innerHTML += allFilesHTMLCombined;
 
       // Append CSS to iFrame
       const style = document.createElement('style') as HTMLStyleElement;
-      style.innerHTML = allFilesCSS[0].value;
+      style.innerHTML = allFilesCSSCombined;
       outputIframeDocument.body.appendChild(style);
 
       // Append Javascript to iFrame
       const script = document.createElement('script') as HTMLScriptElement;
-      script.innerHTML = allFilesJS[0].value;
+      script.innerHTML = allFilesJSCombined;
       outputIframeDocument.body.appendChild(script);
     }
-  }, [filesData]);
+  }, [allFilesCSSCombined, allFilesHTMLCombined, allFilesJSCombined]);
 
   return (
     <OutputContainer id={id}>
@@ -50,7 +48,7 @@ const Output: FC<Props> = ({ id }) => {
           <Address>127.0.0.1</Address>
         </Addressbar>
       </Nav>
-      <Iframe name="output-iframe" ref={iFrameRef} />
+      <Iframe name="output-iframe" ref={iFrameRef} title="code output" />
     </OutputContainer>
   );
 };
