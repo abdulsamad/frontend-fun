@@ -16,7 +16,7 @@ const App: FC = () => {
   useEffect(() => {
     Split(['#sidebar', '#code', '#output'], {
       gutterSize: 5,
-      sizes: [10, 50, 40],
+      sizes: [13, 47, 40],
     });
     Split(['#editor', '#terminal'], {
       gutterSize: 5,
