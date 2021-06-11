@@ -1,5 +1,6 @@
 import { FC } from 'react';
 import Editor from '@monaco-editor/react';
+import { useDebouncedFn } from 'beautiful-react-hooks';
 
 import { useAppContext } from '../../context';
 
@@ -15,9 +16,9 @@ const Index: FC<Props> = ({ id }) => {
   const { filesData, activeFileName, filesList, changeActiveFile, addFileData } = useAppContext();
   const activeFileData = filesData.filter(({ name }) => name === activeFileName)[0];
 
-  const handleEditorChange = (value: any) => {
+  const handleEditorChange = useDebouncedFn((value: any) => {
     addFileData(value);
-  };
+  }, 1000);
 
   return (
     <>
