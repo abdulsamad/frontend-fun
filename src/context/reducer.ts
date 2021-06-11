@@ -16,6 +16,12 @@ const reducer = (state: types.IState, action: types.Action) => {
         fileslist: state.filesList.filter((filename) => filename !== action.payload),
       };
 
+    case types.CHANGE_FILE:
+      return {
+        ...state,
+        activeFile: action.payload,
+      };
+
     default:
       return state;
   }

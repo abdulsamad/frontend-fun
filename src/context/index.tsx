@@ -2,13 +2,15 @@ import { createContext, useContext, useReducer, FC } from 'react';
 
 import reducer from './reducer';
 import * as types from './types';
+import { defaultFilesData, defaultFilesList } from './data';
 
 const initialState: types.IState = {
-  activeFile: null,
-  filesList: [],
-  filesData: [],
+  activeFileName: 'index.html',
+  filesList: defaultFilesList,
+  filesData: defaultFilesData,
   addFile: () => null,
   removeFile: () => null,
+  changeFile: () => null,
 };
 
 const AppContext = createContext<types.IState>(initialState);
@@ -30,14 +32,22 @@ const Context: FC = ({ children }) => {
     });
   };
 
+  const changeFile = (filename: string) => {
+    dispatch({
+      type: types.CHANGE_FILE,
+      payload: filename,
+    });
+  };
+
   return (
     <AppContext.Provider
       value={{
-        activeFile: state.activeFile,
+        activeFileName: state.activeFileName,
         filesList: state.filesList,
         filesData: state.filesData,
         addFile,
         removeFile,
+        changeFile,
       }}
     >
       {children}
