@@ -1,13 +1,45 @@
-import { FC } from 'react';
+import { FC, useRef, useEffect } from 'react';
+
+import { useAppContext } from '../../context';
 
 import OutputContainer from './Output';
 import { Nav, Addressbar, Address } from './Nav';
+import Iframe from './Iframe';
 
 interface Props {
   id: string;
 }
 
 const Output: FC<Props> = ({ id }) => {
+  const { filesData } = useAppContext();
+  const iFrameRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    const outputIframeDocument = (iFrameRef.current as HTMLIFrameElement).contentWindow?.document;
+
+    // prettier-ignore
+    const allFilesHTML = filesData.filter(({ language }) => language === 'html' || language === 'htm');
+    const allFilesCSS = filesData.filter(({ language }) => language === 'css');
+    const allFilesJS = filesData.filter(({ language }) => language === 'javascript');
+
+    if (outputIframeDocument) {
+      outputIframeDocument.body.innerHTML = '';
+
+      // Append HTML to iFrame
+      outputIframeDocument.body.innerHTML += allFilesHTML[0].value;
+
+      // Append CSS to iFrame
+      const style = document.createElement('style') as HTMLStyleElement;
+      style.innerHTML = allFilesCSS[0].value;
+      outputIframeDocument.body.appendChild(style);
+
+      // Append Javascript to iFrame
+      const script = document.createElement('script') as HTMLScriptElement;
+      script.innerHTML = allFilesJS[0].value;
+      outputIframeDocument.body.appendChild(script);
+    }
+  }, [filesData]);
+
   return (
     <OutputContainer id={id}>
       <Nav>
@@ -18,7 +50,7 @@ const Output: FC<Props> = ({ id }) => {
           <Address>127.0.0.1</Address>
         </Addressbar>
       </Nav>
-      <div dangerouslySetInnerHTML={{ __html: `<h1>Hello World</h1>` }}></div>
+      <Iframe name="output-iframe" ref={iFrameRef} />
     </OutputContainer>
   );
 };
