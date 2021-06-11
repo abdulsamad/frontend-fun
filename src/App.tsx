@@ -6,6 +6,9 @@ import GlobalStyles from './styles/GlobalStyles';
 import GlobalContainer from './styles/GlobalContainer';
 import MiddleContainer from './styles/MiddleContainer';
 
+// Context
+import { Context } from './context';
+
 // Components
 import Sidebar from './components/sidebar';
 import Editor from './components/editor';
@@ -28,14 +31,16 @@ const App: FC = () => {
   return (
     <>
       <GlobalStyles />
-      <GlobalContainer className="split">
-        <Sidebar id="sidebar" />
-        <MiddleContainer id="code" className="split">
-          <Editor id="editor" />
-          <Terminal id="terminal" />
-        </MiddleContainer>
-        <Output id="output" />
-      </GlobalContainer>
+      <Context>
+        <GlobalContainer className="split">
+          <Sidebar id="sidebar" />
+          <MiddleContainer id="code" className="split">
+            <Editor id="editor" />
+            <Terminal id="terminal" />
+          </MiddleContainer>
+          <Output id="output" />
+        </GlobalContainer>
+      </Context>
     </>
   );
 };
