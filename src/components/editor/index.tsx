@@ -12,7 +12,7 @@ interface Props {
 }
 
 const Index: FC<Props> = ({ id }) => {
-  const { filesData, activeFileName, filesList } = useAppContext();
+  const { filesData, activeFileName, filesList, changeActiveFile } = useAppContext();
   const activeFileData = filesData.filter(({ name }) => name === activeFileName)[0];
 
   useEffect(() => {
@@ -33,7 +33,7 @@ const Index: FC<Props> = ({ id }) => {
             key={name}
             active={name === activeFileName}
             disabled={name === activeFileName}
-            // onClick={() => setFileName('script.js')}
+            onClick={() => changeActiveFile(name)}
           >
             <AddLanguageLogo fileName={name} />
           </NavItem>
