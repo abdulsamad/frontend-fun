@@ -12,7 +12,7 @@ interface Props {
 }
 
 const Sidebar: FC<Props> = ({ id }) => {
-  const { filesList, activeFileName } = useAppContext();
+  const { filesList, activeFileName, changeActiveFile } = useAppContext();
 
   const addNewFile = () => {
     const acceptedFileFormats = 'html' || 'htm' || 'css' || 'js';
@@ -42,7 +42,13 @@ const Sidebar: FC<Props> = ({ id }) => {
           </TopBarButton>
         </TopBar>
         {filesList.map((name) => (
-          <FileItem active={name === activeFileName} key={name}>
+          <FileItem
+            active={name === activeFileName}
+            key={name}
+            onClick={() => {
+              changeActiveFile(name);
+            }}
+          >
             <AddLanguageLogo fileName={name} />
           </FileItem>
         ))}
