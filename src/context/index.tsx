@@ -11,6 +11,7 @@ const initialState: types.IState = {
   addFile: () => null,
   removeFile: () => null,
   changeActiveFile: () => null,
+  addFileData: () => null,
 };
 
 const AppContext = createContext<types.IState>(initialState);
@@ -39,6 +40,13 @@ const Context: FC = ({ children }) => {
     });
   };
 
+  const addFileData = (data: string) => {
+    dispatch({
+      type: types.ADD_FILE_DATA,
+      payload: data,
+    });
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -48,6 +56,7 @@ const Context: FC = ({ children }) => {
         addFile,
         removeFile,
         changeActiveFile,
+        addFileData,
       }}
     >
       {children}

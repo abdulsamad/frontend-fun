@@ -1,4 +1,4 @@
-import { FC, useEffect } from 'react';
+import { FC } from 'react';
 import Editor from '@monaco-editor/react';
 
 import { useAppContext } from '../../context';
@@ -12,17 +12,11 @@ interface Props {
 }
 
 const Index: FC<Props> = ({ id }) => {
-  const { filesData, activeFileName, filesList, changeActiveFile } = useAppContext();
+  const { filesData, activeFileName, filesList, changeActiveFile, addFileData } = useAppContext();
   const activeFileData = filesData.filter(({ name }) => name === activeFileName)[0];
 
-  useEffect(() => {
-    // window.onbeforeunload = function () {
-    //   return 'Are you sure you want to leave?';
-    // };
-  }, []);
-
   const handleEditorChange = (value: any) => {
-    console.log('here is the current model value:', value);
+    addFileData(value);
   };
 
   return (

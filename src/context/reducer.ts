@@ -22,6 +22,24 @@ const reducer = (state: types.IState, action: types.Action) => {
         activeFileName: action.payload,
       };
 
+    case types.ADD_FILE_DATA:
+      const activeFileData = state.filesData.map((filedata: types.fileData) => {
+        const { name } = filedata;
+
+        if (name === state.activeFileName)
+          return {
+            ...filedata,
+            value: action.payload,
+          };
+
+        return filedata;
+      });
+
+      return {
+        ...state,
+        filesData: activeFileData,
+      };
+
     default:
       return state;
   }
