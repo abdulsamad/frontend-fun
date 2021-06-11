@@ -1,5 +1,7 @@
 import { FC } from 'react';
 
+import { useAppContext } from '../../context';
+
 import SidebarSection from './Sidebar';
 import { Panel, PanelItem } from './Panel';
 import { Files, FileItem, TopBar, TopBarButton } from './Files';
@@ -10,6 +12,8 @@ interface Props {
 }
 
 const Sidebar: FC<Props> = ({ id }) => {
+  const { filesList, activeFileName } = useAppContext();
+
   const addNewFile = () => {
     const acceptedFileFormats = 'html' || 'htm' || 'css' || 'js';
     const filename = window.prompt('Please enter file name', 'index.html');
@@ -37,15 +41,11 @@ const Sidebar: FC<Props> = ({ id }) => {
             </svg>
           </TopBarButton>
         </TopBar>
-        <FileItem active={true}>
-          <AddLanguageLogo fileName="index.html" />
-        </FileItem>
-        <FileItem>
-          <AddLanguageLogo fileName="style.css" />
-        </FileItem>
-        <FileItem>
-          <AddLanguageLogo fileName="app.js" />
-        </FileItem>
+        {filesList.map((name) => (
+          <FileItem active={name === activeFileName} key={name}>
+            <AddLanguageLogo fileName={name} />
+          </FileItem>
+        ))}
       </Files>
     </SidebarSection>
   );
