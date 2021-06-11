@@ -16,7 +16,7 @@ export const defaultFilesData: types.fileData[] = [
   {
     name: files[2],
     language: 'javascript',
-    value: 'console.log("Hello Wolrd");',
+    value: 'console.log("Hello World");',
   },
 ];
 
