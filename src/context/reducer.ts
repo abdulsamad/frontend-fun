@@ -19,7 +19,7 @@ const reducer = (state: types.IState, action: types.Action) => {
     case types.CHANGE_FILE:
       return {
         ...state,
-        activeFile: action.payload,
+        activeFileName: action.payload,
       };
 
     default:
