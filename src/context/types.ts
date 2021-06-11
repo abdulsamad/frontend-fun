@@ -5,7 +5,7 @@ export interface IState {
   filesData: fileData[];
   addFile: (filename: string) => void;
   removeFile: (filename: string) => void;
-  changeFile: (filename: string) => void;
+  changeActiveFile: (filename: string) => void;
 }
 
 // Code files mapped with names

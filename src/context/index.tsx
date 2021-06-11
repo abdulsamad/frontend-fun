@@ -10,7 +10,7 @@ const initialState: types.IState = {
   filesData: defaultFilesData,
   addFile: () => null,
   removeFile: () => null,
-  changeFile: () => null,
+  changeActiveFile: () => null,
 };
 
 const AppContext = createContext<types.IState>(initialState);
@@ -32,7 +32,7 @@ const Context: FC = ({ children }) => {
     });
   };
 
-  const changeFile = (filename: string) => {
+  const changeActiveFile = (filename: string) => {
     dispatch({
       type: types.CHANGE_FILE,
       payload: filename,
@@ -47,7 +47,7 @@ const Context: FC = ({ children }) => {
         filesData: state.filesData,
         addFile,
         removeFile,
-        changeFile,
+        changeActiveFile,
       }}
     >
       {children}
