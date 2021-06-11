@@ -3,6 +3,7 @@ import { FC } from 'react';
 import SidebarSection from './Sidebar';
 import { Panel, PanelItem } from './Panel';
 import { Files, FileItem, TopBar, TopBarButton } from './Files';
+import AddLanguageLogo from '../../utils/AddLanguageLogo';
 
 interface Props {
   id: string;
@@ -13,7 +14,7 @@ const Sidebar: FC<Props> = ({ id }) => {
     const acceptedFileFormats = 'html' || 'htm' || 'css' || 'js';
     const filename = window.prompt('Please enter file name', 'index.html');
 
-    // endsWith is ES6 specs. Should be replaced with regex for IE support
+    //  endsWith is ES6 specs. Should be replaced with regex for IE support and improved validation
     if (filename !== '' && filename !== null && filename.endsWith(acceptedFileFormats))
       console.log(filename);
   };
@@ -36,9 +37,15 @@ const Sidebar: FC<Props> = ({ id }) => {
             </svg>
           </TopBarButton>
         </TopBar>
-        <FileItem active={true}>index.html</FileItem>
-        <FileItem>style.css</FileItem>
-        <FileItem>app.js</FileItem>
+        <FileItem active={true}>
+          <AddLanguageLogo fileName="index.html" />
+        </FileItem>
+        <FileItem>
+          <AddLanguageLogo fileName="style.css" />
+        </FileItem>
+        <FileItem>
+          <AddLanguageLogo fileName="app.js" />
+        </FileItem>
       </Files>
     </SidebarSection>
   );
