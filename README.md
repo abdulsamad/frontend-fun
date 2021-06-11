@@ -1,7 +1,7 @@
 ## Codedamn Assignment
 
 ### Basic Architechture
-![Web app architechture](readme/architechture.png "web app architechture")
+<img src="readme/architechture.png" height="660" width="510" />
 
 ### Available Scripts
 
