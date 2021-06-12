@@ -1,6 +1,6 @@
-## Codedamn Assignment
+## Front-End Code Editor
 
-### Basic Architechture
+### Architechture
 <img src="readme/architechture.png" height="660" width="510" />
 
 ### Installation
@@ -26,5 +26,9 @@ Run **`vercel`** command in project directory and connect project to vercel acco
 Run **`vercel dev`** command to start local server
 
 For more information go to [Vercel CLI docs](https://vercel.com/docs/cli)
+
+### Screenshot
+
+![Front-end code editor](/readme/screenshot.png "Front-end code editor screenshot")
 
 
