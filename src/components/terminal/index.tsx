@@ -2,20 +2,23 @@ import { FC, useEffect, useRef, useState } from 'react';
 import { XTerm } from 'xterm-for-react';
 import 'xterm/css/xterm.css';
 
+import { useAppContext } from '../../context';
+
 import TerminalContainer from './Terminal';
-import CommandOutput from './commands';
+import commandOuputs from './commands';
 
 interface Props {
   id: string;
 }
 
 const Terminal: FC<Props> = ({ id }) => {
+  const { filesList } = useAppContext();
   const [terminalText, setTerminalText] = useState('');
   const xTermRef = useRef<XTerm | null>(null);
   const terminalHostname = `$root@${document.domain}~`;
 
   useEffect(() => {
-    xTermRef.current?.terminal.writeln('Enter help to see the list of supported commands');
+    xTermRef.current?.terminal.writeln('Enter "help" to see the list of supported commands');
     xTermRef.current?.terminal.write(terminalHostname);
   }, [terminalHostname]);
 
@@ -35,19 +38,24 @@ const Terminal: FC<Props> = ({ id }) => {
 
     switch (code) {
       case 12:
+        // CTRL + L
         xterm.terminal.reset();
         setTerminalText('');
         xterm.terminal.write(terminalHostname);
         break;
 
       case 13:
-        xterm.terminal.write(`\r\n ${terminalText} \r\n`);
-        xterm.terminal.write(terminalHostname);
-        setTerminalText('');
+        // Enter key
+        commandOuputs(terminalText, filesList).then((output) => {
+          xterm.terminal.write(`\r\n${output}\r\n`);
+          xterm.terminal.write(terminalHostname);
+          setTerminalText('');
+        });
+
         break;
 
       case 127:
-        // backspace
+        // Backspace
         if (terminalText) {
           xterm.terminal.write('\x1b[D');
           setTerminalText((prevState) => prevState.substring(0, prevState.length - 1));
@@ -55,7 +63,7 @@ const Terminal: FC<Props> = ({ id }) => {
         break;
 
       default:
-        // Add general key press characters to the terminal
+        // General keys
         xterm.terminal.write(data);
         setTerminalText((prevState) => prevState + data);
     }
@@ -63,7 +71,14 @@ const Terminal: FC<Props> = ({ id }) => {
 
   return (
     <TerminalContainer id={id}>
-      <XTerm ref={xTermRef} onData={onData} />
+      <XTerm
+        ref={xTermRef}
+        onData={onData}
+        options={{
+          windowOptions: { fullscreenWin: true },
+          theme: { background: '#131313', cursor: '#00FF00', foreground: '#00FF00' },
+        }}
+      />
     </TerminalContainer>
   );
 };
