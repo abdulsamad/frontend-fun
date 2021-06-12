@@ -14,14 +14,20 @@ interface Props {
 const Sidebar: FC<Props> = ({ id }) => {
   const { filesList, activeFileName, changeActiveFile, addFile } = useAppContext();
 
+  const isAcceptedFileFormat = (filename: string) =>
+    filename.endsWith('html') ||
+    filename.endsWith('htm') ||
+    filename.endsWith('css') ||
+    filename.endsWith('js');
+
   const addNewFile = () => {
-    const acceptedFileFormats = 'html' || 'htm' || 'css' || 'js';
     const filename = window.prompt('Please enter file name', 'index.html');
 
-    //  endsWith is ES6 specs. Should be replaced with regex for IE support and improved validation
-    if (filename !== '' && filename !== null && filename.endsWith(acceptedFileFormats)) {
+    if (filename !== '' && filename !== null && isAcceptedFileFormat(filename)) {
       const isFilePresent = filesList.filter((name) => name === filename).length;
-      const extension = filename.toLowerCase().split('.').pop() as string;
+      let extension = filename.toLowerCase().split('.').pop() as string;
+      // Because js === javascript in Monaco
+      extension = extension === 'js' ? 'javascript' : extension;
 
       if (isFilePresent) {
         alert('File name should be different');
