@@ -8,11 +8,24 @@ mongoose.connect(process.env.DATABASE_URI, {
 });
 
 module.exports = (req, res) => {
-  const filesData = new filesDataModel(req.body);
+  if (req.method !== 'POST') return res.json({ err: 'Only POST requests allowed.' });
 
-  filesData.save((err, data) => {
-    if (err) return res.json({ err });
+  const { _id } = req.query;
 
-    return res.json({ data });
-  });
+  // _id should be parsed and validated for security reasons
+  if (_id) {
+    filesDataModel.findOneAndUpdate({ _id }, req.body).exec((err, data) => {
+      if (err) return res.json({ err });
+
+      return res.json(data);
+    });
+  } else {
+    const filesData = new filesDataModel(req.body);
+
+    filesData.save((err, data) => {
+      if (err) return res.json({ err });
+
+      return res.json(data);
+    });
+  }
 };
