@@ -5,9 +5,19 @@
 
 ### Installation
 
+**`git clone https://github.com/abdulsamad/front-end_code_editor.git`**
+
 **`yarn install`**
 
 **`yarn global -g vercel`**
+
+### Environment Variables
+```js
+DATABASE_URI = /* Your MongoDB URI */
+```
+
+
+### Development
 
 [Create Vercel account](https://vercel.com/dashboard) (If not already)
 
