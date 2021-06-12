@@ -10,10 +10,10 @@ mongoose.connect(process.env.DATABASE_URI, {
 module.exports = (req, res) => {
   if (req.method !== 'GET') return res.json({ err: 'Only GET requests allowed.' });
 
-  const { _id } = req.query;
+  const { id } = req.query;
 
   // _id should be parsed and validated for security reasons
-  filesDataModel.find({ _id }).exec((err, data) => {
+  filesDataModel.find({ id }).exec((err, data) => {
     if (err) return res.json({ err });
 
     return res.json(data);
