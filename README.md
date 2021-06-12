@@ -3,17 +3,18 @@
 ### Basic Architechture
 <img src="readme/architechture.png" height="660" width="510" />
 
-### Available Scripts
+### Installation
 
-In the project directory, you can run:
+**`yarn install`**
 
-### `yarn start`
+**`yarn global -g vercel`**
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+[Create Vercel account](https://vercel.com/dashboard) (If not already)
 
-### `yarn build`
+Run **`vercel`** command in project directory and connect project to vercel account
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Run **`vercel dev`** command to start local server
+
+For more information go to [Vercel CLI docs](https://vercel.com/docs/cli)
+
 
