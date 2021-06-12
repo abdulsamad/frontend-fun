@@ -13,7 +13,7 @@ module.exports = (req, res) => {
   const { id } = req.query;
 
   // _id should be parsed and validated for security reasons
-  filesDataModel.find({ id }).exec((err, data) => {
+  filesDataModel.findOne({ id }).exec((err, data) => {
     if (err) return res.json({ err });
 
     return res.json(data);
