@@ -45,13 +45,27 @@ const Sidebar: FC<Props> = ({ id }) => {
   };
 
   const saveWork = () => {
+    const id = localStorage.getItem('id');
+
+    if (id) {
+      fetch(`/api/saveFilesData?_id=${id}`, {
+        method: 'POST',
+        body: JSON.stringify({ filesData }),
+      })
+        .then((res) => res.json())
+        .then(() => {
+          alert('Successfuly updated your saved data');
+        });
+      return false;
+    }
+
     fetch('/api/saveFilesData', {
       method: 'POST',
-      body: JSON.stringify(filesData),
+      body: JSON.stringify({ filesData }),
     })
       .then((res) => res.json())
       .then(({ _id }) => {
-        localStorage.setItem('_id', _id);
+        localStorage.setItem('id', _id);
         alert('Successfuly saved your data');
       });
   };
