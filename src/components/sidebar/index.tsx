@@ -12,7 +12,7 @@ interface Props {
 }
 
 const Sidebar: FC<Props> = ({ id }) => {
-  const { filesList, activeFileName, changeActiveFile, addFile } = useAppContext();
+  const { filesData, filesList, activeFileName, changeActiveFile, addFile } = useAppContext();
 
   const isAcceptedFileFormat = (filename: string) =>
     filename.endsWith('html') ||
@@ -44,12 +44,29 @@ const Sidebar: FC<Props> = ({ id }) => {
     }
   };
 
+  const saveWork = () => {
+    fetch('/api/saveFilesData', {
+      method: 'POST',
+      body: JSON.stringify(filesData),
+    })
+      .then((res) => res.json())
+      .then(({ _id }) => {
+        localStorage.setItem('_id', _id);
+        alert('Successfuly saved your data');
+      });
+  };
+
   return (
     <SidebarSection id={id}>
       <Panel>
         <PanelItem active={true}>
           <svg width="24" height="24" viewBox="0 0 24 24">
             <path d="M13 6c3.469 0 2 5 2 5s5-1.594 5 2v9h-12v-16h5zm.827-2h-7.827v20h16v-11.842c0-2.392-5.011-8.158-8.173-8.158zm.173-2l-3-2h-9v22h2v-20h10z" />
+          </svg>
+        </PanelItem>
+        <PanelItem title="Save files data" onClick={saveWork}>
+          <svg width="24" height="24" viewBox="0 0 24 24">
+            <path d="M13 3h2.996v5h-2.996v-5zm11 1v20h-24v-24h20l4 4zm-17 5h10v-7h-10v7zm15-4.171l-2.828-2.829h-.172v9h-14v-9h-3v20h20v-17.171z" />
           </svg>
         </PanelItem>
       </Panel>
