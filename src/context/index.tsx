@@ -22,7 +22,7 @@ const Context: FC = ({ children }) => {
   useEffect(() => {
     // Check previous data is saved
     if (localStorage.getItem('_id')) {
-      console.log('data hai');
+      console.log('data hai ');
     }
 
     // Save on Page Exit or Reload
