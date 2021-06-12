@@ -5,14 +5,15 @@ const reducer = (state: types.IState, action: types.Action) => {
     case types.ADD_FILE:
       return {
         ...state,
-        activeFile: action.payload,
-        filesList: [...state.filesList, action.payload],
+        activeFileName: action.payload.name,
+        filesList: [...state.filesList, action.payload.name],
+        filesData: [...state.filesData, action.payload],
       };
 
     case types.REMOVE_FILE:
       return {
         ...state,
-        activeFile: state.filesList[0],
+        activeFileName: state.filesList[0],
         fileslist: state.filesList.filter((filename) => filename !== action.payload),
       };
 

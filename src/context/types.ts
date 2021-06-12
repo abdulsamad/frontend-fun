@@ -3,7 +3,7 @@ export interface IState {
   activeFileName: string | null;
   filesList: string[];
   filesData: fileData[];
-  addFile: (filename: string) => void;
+  addFile: (filename: fileData) => void;
   removeFile: (filename: string) => void;
   changeActiveFile: (filename: string) => void;
   addFileData: (filename: string) => void;
@@ -25,7 +25,7 @@ export const ADD_FILE_DATA = 'ADD_FILE_DATA';
 // Context Dispatch function shapes
 export interface addFile {
   type: 'ADD_FILE';
-  payload: string;
+  payload: fileData;
 }
 
 export interface removeFile {

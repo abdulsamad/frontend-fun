@@ -19,7 +19,7 @@ const AppContext = createContext<types.IState>(initialState);
 const Context: FC = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const addFile = (filename: string) => {
+  const addFile = (filename: types.fileData) => {
     dispatch({
       type: types.ADD_FILE,
       payload: filename,
