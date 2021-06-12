@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, FC } from 'react';
+import { createContext, useContext, useReducer, useEffect, FC } from 'react';
 
 import reducer from './reducer';
 import * as types from './types';
@@ -18,6 +18,18 @@ const AppContext = createContext<types.IState>(initialState);
 
 const Context: FC = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  useEffect(() => {
+    // Check previous data is saved
+    if (localStorage.getItem('_id')) {
+      console.log('data hai');
+    }
+
+    // Save on Page Exit or Reload
+    window.addEventListener('unload', () => {
+      navigator.sendBeacon('/api/saveFilesData', JSON.stringify({ filesData: state.filesData }));
+    });
+  }, [state.filesData]);
 
   const addFile = (filename: types.fileData) => {
     dispatch({
