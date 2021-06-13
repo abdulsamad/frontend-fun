@@ -1,9 +1,6 @@
 ## Frontend Fun
 Online code editor for HTML, CSS, and JavaScript with live reload
 
-### Architechture
-<img src="readme/architechture.png" />
-
 ### Installation
 Clone the repository
 ```bash
@@ -13,8 +10,10 @@ git clone https://github.com/abdulsamad/front-end_code_editor.git
 Install dependencies
 
 ```bash
-yarn install
-
+yarn
+```
+Vercel CLI is also required to run serverless functions
+```
 yarn global add vercel
 ```
 
@@ -41,4 +40,5 @@ For more information visit [Vercel CLI docs](https://vercel.com/docs/cli)
 
 ![Front-end code editor](/readme/screenshot.png "Front-end code editor screenshot")
 
-
+### Architechture
+![project architechture](/readme/architechture.png "project architechture")
