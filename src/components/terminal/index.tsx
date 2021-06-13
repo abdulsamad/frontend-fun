@@ -12,7 +12,7 @@ interface Props {
 }
 
 const Terminal: FC<Props> = ({ id }) => {
-  const { filesList } = useAppContext();
+  const { filesList, addFile, removeFile } = useAppContext();
   const [terminalText, setTerminalText] = useState('');
   const xTermRef = useRef<XTerm | null>(null);
   const terminalHostname = `$root@${document.domain}~`;
@@ -25,10 +25,12 @@ const Terminal: FC<Props> = ({ id }) => {
   const onData = (data: any) => {
     const xterm = xTermRef.current;
     const code = data.charCodeAt(0);
+    const touchRegex = new RegExp('(touch\\s[a-zA-Z]{4,50}).(html|htm|css|js)');
+    const rmRegex = new RegExp('(rm\\s[a-zA-Z]{4,50}).(html|htm|css|js)');
 
     if (xterm === null || terminalText.length < 0) return;
 
-    //  Clear Command
+    //  clear command
     if (terminalText === 'clear' || terminalText === 'cls') {
       xterm.terminal.reset();
       setTerminalText('');
@@ -36,9 +38,29 @@ const Terminal: FC<Props> = ({ id }) => {
       return false;
     }
 
+    // touch Command
+    else if (touchRegex.test(terminalText)) {
+      let extension = terminalText.toLowerCase().split('.').pop() as string;
+      // Because js === javascript in Monaco
+      extension = extension === 'js' ? 'javascript' : extension;
+
+      addFile({ name: terminalText.slice(6), language: extension, value: '' });
+      setTerminalText('');
+      xterm.terminal.write(`\r\n\r${terminalHostname}`);
+      return false;
+    }
+
+    // rm command
+    else if (rmRegex.test(terminalText)) {
+      removeFile(terminalText.slice(3));
+      setTerminalText('');
+      xterm.terminal.write(terminalHostname);
+      return false;
+    }
+
     switch (code) {
       case 12:
-        // CTRL + L
+        // CTRL + L (Clear Terminal)
         xterm.terminal.reset();
         setTerminalText('');
         xterm.terminal.write(terminalHostname);

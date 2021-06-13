@@ -7,6 +7,8 @@ const commandsList: string[] = [
   'tell me a joke',
   'pwd',
   'i am bored',
+  'touch <filename>',
+  'rm <filename>',
 ];
 
 const commandOuputs = async (command: string, filesList: string[]) => {
