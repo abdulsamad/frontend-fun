@@ -54,7 +54,7 @@ const Sidebar: FC<Props> = ({ id }) => {
     }
   };
 
-  const delteFile = (ev: MouseEvent, filename: string) => {
+  const deleteFile = (ev: MouseEvent, filename: string) => {
     ev.stopPropagation();
     const doDelete = window.confirm('Are you sure you want to delete this file?');
 
@@ -161,7 +161,7 @@ const Sidebar: FC<Props> = ({ id }) => {
             <div>
               <AddLanguageLogo fileName={file.name} />
             </div>
-            <DeleteButton title="Delete file" onClick={(ev) => delteFile(ev, file.name)}>
+            <DeleteButton title="Delete file" onClick={(ev) => deleteFile(ev, file.name)}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="#f5f5f5">
                 <path d="M3 6l3 18h12l3-18h-18zm19-4v2h-20v-2h5.711c.9 0 1.631-1.099 1.631-2h5.316c0 .901.73 2 1.631 2h5.711z" />
               </svg>
