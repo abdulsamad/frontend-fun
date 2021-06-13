@@ -1,4 +1,5 @@
-## Frontend Fun 
+## Frontend Fun
+Online code editor for HTML, CSS, and JavaScript with live reload
 
 ### Architechture
 <img src="readme/architechture.png" />
