@@ -63,7 +63,7 @@ const Terminal: FC<Props> = ({ id }) => {
     else if (rmRegex.test(terminalText)) {
       removeFile(terminalText.slice(3));
       setTerminalText('');
-      xterm.terminal.write(terminalHostname);
+      xterm.terminal.write(`\r\n\r${terminalHostname}`);
       return false;
     }
 
