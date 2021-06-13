@@ -11,9 +11,10 @@ const reducer = (state: types.IState, action: types.Action) => {
       };
 
     case types.REMOVE_FILE:
+      console.log(action.payload);
       return {
         ...state,
-        fileslist: state.filesList.filter((filename) => filename !== action.payload),
+        filesList: state.filesList.filter((filename) => filename !== action.payload),
         filesData: state.filesData.filter(({ name }) => name !== action.payload),
         activeFile: state.filesData[0],
       };

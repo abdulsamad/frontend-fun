@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, MouseEvent } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -6,7 +6,7 @@ import { useAppContext } from '../../context';
 
 import SidebarSection from './Sidebar';
 import { Panel, PanelItem, UserId } from './Panel';
-import { Files, FileItem, TopBar, TopBarButton } from './Files';
+import { Files, FileItem, TopBar, TopBarButton, DeleteButton } from './Files';
 import AddLanguageLogo from '../../utils/AddLanguageLogo';
 
 interface Props {
@@ -14,8 +14,15 @@ interface Props {
 }
 
 const Sidebar: FC<Props> = ({ id }) => {
-  const { filesData, filesList, activeFile, changeActiveFile, addFile, addImportedFilesData } =
-    useAppContext();
+  const {
+    filesData,
+    filesList,
+    activeFile,
+    changeActiveFile,
+    addFile,
+    addImportedFilesData,
+    removeFile,
+  } = useAppContext();
 
   const isAcceptedFileFormat = (filename: string) =>
     filename.endsWith('html') ||
@@ -44,6 +51,16 @@ const Sidebar: FC<Props> = ({ id }) => {
       });
     } else if (filename) {
       toast.error('File format not supported! Only .html, .css, .js 😔');
+    }
+  };
+
+  const delteFile = (ev: MouseEvent, filename: string) => {
+    ev.stopPropagation();
+    const doDelete = window.confirm('Are you sure you want to delete this file?');
+
+    if (doDelete) {
+      removeFile(filename);
+      //
     }
   };
 
@@ -110,7 +127,7 @@ const Sidebar: FC<Props> = ({ id }) => {
         draggable={false}
       />
       <Panel>
-        <PanelItem active={true}>
+        <PanelItem title="Explorer" active={true}>
           <svg width="24" height="24" viewBox="0 0 24 24">
             <path d="M13 6c3.469 0 2 5 2 5s5-1.594 5 2v9h-12v-16h5zm.827-2h-7.827v20h16v-11.842c0-2.392-5.011-8.158-8.173-8.158zm.173-2l-3-2h-9v22h2v-20h10z" />
           </svg>
@@ -129,7 +146,7 @@ const Sidebar: FC<Props> = ({ id }) => {
       <Files>
         <TopBar>
           Files
-          <TopBarButton onClick={addNewFile}>
+          <TopBarButton title="Add new file" onClick={addNewFile}>
             <svg width="16" height="16" viewBox="0 0 24 24">
               <path d="M23 17h-3v-3h-2v3h-3v2h3v3h2v-3h3v-2zm-7 5v2h-15v-24h10.189c3.163 0 9.811 7.223 9.811 9.614v2.386h-2v-1.543c0-4.107-6-2.457-6-2.457s1.518-6-2.638-6h-7.362v20h13z" />
             </svg>
@@ -139,11 +156,16 @@ const Sidebar: FC<Props> = ({ id }) => {
           <FileItem
             active={file.name === activeFile.name}
             key={file.name}
-            onClick={() => {
-              changeActiveFile(file);
-            }}
+            onClick={() => changeActiveFile(file)}
           >
-            <AddLanguageLogo fileName={file.name} />
+            <div>
+              <AddLanguageLogo fileName={file.name} />
+            </div>
+            <DeleteButton title="Delete file" onClick={(ev) => delteFile(ev, file.name)}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#f5f5f5">
+                <path d="M3 6l3 18h12l3-18h-18zm19-4v2h-20v-2h5.711c.9 0 1.631-1.099 1.631-2h5.316c0 .901.73 2 1.631 2h5.711z" />
+              </svg>
+            </DeleteButton>
           </FileItem>
         ))}
       </Files>

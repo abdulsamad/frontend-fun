@@ -33,9 +33,31 @@ interface FileItemProps {
   active?: boolean;
 }
 
-export const FileItem = styled.p<FileItemProps>`
-  padding: 4px 16px;
+export const FileItem = styled.div<FileItemProps>`
+  padding: 0 16px;
   margin-bottom: 0;
   background-color: ${({ active }) => (active ? ' #37373d' : 'transparent')};
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  & > div {
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    & > button {
+      visibility: visible;
+    }
+  }
+`;
+
+export const DeleteButton = styled.button`
+  border: none;
+  visibility: hidden;
+
+  &:focus {
+    outline: none;
+  }
 `;
