@@ -17,7 +17,7 @@ const Index: FC<Props> = ({ id }) => {
 
   const handleEditorChange = useDebouncedFn((value: any) => {
     addFileData(value);
-  }, 500);
+  }, 1000);
 
   return (
     <>
