@@ -21,11 +21,17 @@ const Context: FC = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
+    const id = localStorage.getItem('id');
+
     // Check previous data is saved
-    if (localStorage.getItem('_id')) {
-      console.log('data hai');
+    if (id) {
+      fetch(`/api/getFilesData?id=${id}`)
+        .then((res) => res.json())
+        .then(({ filesData }) => {
+          addImportedFilesData(filesData);
+        });
     }
-  }, [state.filesData]);
+  }, []);
 
   const addFile = (fileData: types.fileData) => {
     dispatch({
