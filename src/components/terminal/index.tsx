@@ -40,11 +40,20 @@ const Terminal: FC<Props> = ({ id }) => {
 
     // touch Command
     else if (touchRegex.test(terminalText)) {
+      const filename = terminalText.slice(6);
+      const isFilePresent = filesList.filter((name) => name === filename).length;
       let extension = terminalText.toLowerCase().split('.').pop() as string;
       // Because js === javascript in Monaco
       extension = extension === 'js' ? 'javascript' : extension;
 
-      addFile({ name: terminalText.slice(6), language: extension, value: '' });
+      if (isFilePresent) {
+        setTerminalText('');
+        xterm.terminal.write(`\r\n\rError: File name cannot be same`);
+        xterm.terminal.write(`\r\n\r${terminalHostname}`);
+        return false;
+      }
+
+      addFile({ name: filename, language: extension, value: '' });
       setTerminalText('');
       xterm.terminal.write(`\r\n\r${terminalHostname}`);
       return false;
