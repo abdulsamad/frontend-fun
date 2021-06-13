@@ -47,6 +47,7 @@ const reducer = (state: types.IState, action: types.Action) => {
     case types.ADD_IMPORTED_FILES_DATA:
       return {
         ...state,
+        activeFile: action.payload[0],
         filesData: action.payload,
       };
 

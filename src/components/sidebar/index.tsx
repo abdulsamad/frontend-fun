@@ -14,7 +14,8 @@ interface Props {
 }
 
 const Sidebar: FC<Props> = ({ id }) => {
-  const { filesData, filesList, activeFile, changeActiveFile, addFile } = useAppContext();
+  const { filesData, filesList, activeFile, changeActiveFile, addFile, addImportedFilesData } =
+    useAppContext();
 
   const isAcceptedFileFormat = (filename: string) =>
     filename.endsWith('html') ||
@@ -93,7 +94,7 @@ const Sidebar: FC<Props> = ({ id }) => {
       fetch(`/api/getFilesData?id=${id}`)
         .then((res) => res.json())
         .then(({ filesData }) => {
-          console.log(filesData);
+          addImportedFilesData(filesData);
         });
     }
   };

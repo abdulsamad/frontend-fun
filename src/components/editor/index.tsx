@@ -38,7 +38,7 @@ const Index: FC<Props> = ({ id }) => {
           height="100%"
           theme="vs-dark"
           defaultLanguage={activeFile.language}
-          defaultValue={activeFile.value}
+          value={activeFile.value}
           path={activeFile.name}
           onChange={handleEditorChange}
         />
