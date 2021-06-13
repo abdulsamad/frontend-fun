@@ -40,6 +40,6 @@ export const PanelItem = styled.button<PanelItemProps>`
 export const UserId = styled.span`
   user-select: all;
   background-color: #03a9f4;
-  padding: 0 5px;
+  padding: 5px;
   border-radius: 5px;
 `;

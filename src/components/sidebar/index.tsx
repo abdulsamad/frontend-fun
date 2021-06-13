@@ -57,12 +57,13 @@ const Sidebar: FC<Props> = ({ id }) => {
       })
         .then((res) => res.json())
         .then(({ id }) => {
+          toast.dismiss();
           toast.dark(
             <div>
               Successfuly updated your saved data.
               <br />
-              You can also import your saved data by entering <UserId>{id}</UserId> in the import
-              option.
+              You can also import your saved data from anywhere by entering <UserId>{id}</UserId> in
+              the import option.
             </div>
           );
         });
@@ -76,12 +77,13 @@ const Sidebar: FC<Props> = ({ id }) => {
       .then((res) => res.json())
       .then(({ id }) => {
         localStorage.setItem('id', id);
+        toast.dismiss();
         toast.dark(
           <div>
             Successfuly saved your data.
             <br />
-            You can also import your saved data by entering <UserId>{id}</UserId> in the import
-            option.
+            You can also import your saved data from anywhere by entering <UserId>{id}</UserId> in
+            the import option.
           </div>
         );
       });
