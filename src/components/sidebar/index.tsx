@@ -39,7 +39,7 @@ const Sidebar: FC<Props> = ({ id }) => {
         language: extension,
         value: '',
       });
-    } else {
+    } else if (filename) {
       alert('File format not supported! Only .html, .css, .js 😔');
     }
   };
