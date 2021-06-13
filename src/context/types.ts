@@ -1,12 +1,12 @@
 // Context Initial State
 export interface IState {
-  activeFileName: string | null;
+  activeFile: fileData;
   filesList: string[];
   filesData: fileData[];
-  addFile: (filename: fileData) => void;
+  addFile: (fileData: fileData) => void;
   removeFile: (filename: string) => void;
-  changeActiveFile: (filename: string) => void;
-  addFileData: (filename: string) => void;
+  changeActiveFile: (fileData: fileData) => void;
+  addFileData: (fileData: fileData) => void;
 }
 
 // Code files mapped with names
@@ -33,15 +33,15 @@ export interface removeFile {
   payload: string;
 }
 
-export interface changeFile {
+export interface changeActiveFile {
   type: 'CHANGE_FILE';
-  payload: string;
+  payload: fileData;
 }
 
 export interface addFileData {
   type: 'ADD_FILE_DATA';
-  payload: string;
+  payload: fileData;
 }
 
 // Types for Reducers Action
-export type Action = addFile | removeFile | changeFile | addFileData;
+export type Action = addFile | removeFile | changeActiveFile | addFileData;

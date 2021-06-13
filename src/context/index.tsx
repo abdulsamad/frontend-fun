@@ -2,10 +2,10 @@ import { createContext, useContext, useReducer, useEffect, FC } from 'react';
 
 import reducer from './reducer';
 import * as types from './types';
-import { defaultFilesData, defaultFilesList } from './data';
+import { defaultFilesData, defaultFilesList, defaultActiveFile } from './data';
 
 const initialState: types.IState = {
-  activeFileName: 'index.html',
+  activeFile: defaultActiveFile,
   filesList: defaultFilesList,
   filesData: defaultFilesData,
   addFile: () => null,
@@ -22,19 +22,14 @@ const Context: FC = ({ children }) => {
   useEffect(() => {
     // Check previous data is saved
     if (localStorage.getItem('_id')) {
-      console.log('data hai ');
+      console.log('data hai');
     }
-
-    // Save on Page Exit or Reload
-    window.addEventListener('unload', () => {
-      navigator.sendBeacon('/api/saveFilesData', JSON.stringify({ filesData: state.filesData }));
-    });
   }, [state.filesData]);
 
-  const addFile = (filename: types.fileData) => {
+  const addFile = (fileData: types.fileData) => {
     dispatch({
       type: types.ADD_FILE,
-      payload: filename,
+      payload: fileData,
     });
   };
 
@@ -45,24 +40,24 @@ const Context: FC = ({ children }) => {
     });
   };
 
-  const changeActiveFile = (filename: string) => {
+  const changeActiveFile = (fileData: types.fileData) => {
     dispatch({
       type: types.CHANGE_FILE,
-      payload: filename,
+      payload: fileData,
     });
   };
 
-  const addFileData = (data: string) => {
+  const addFileData = (fileData: types.fileData) => {
     dispatch({
       type: types.ADD_FILE_DATA,
-      payload: data,
+      payload: fileData,
     });
   };
 
   return (
     <AppContext.Provider
       value={{
-        activeFileName: state.activeFileName,
+        activeFile: state.activeFile,
         filesList: state.filesList,
         filesData: state.filesData,
         addFile,
