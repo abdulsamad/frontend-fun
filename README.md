@@ -9,7 +9,7 @@
 
 **`yarn install`**
 
-**`yarn global -g vercel`**
+**`yarn global add vercel`**
 
 ### Environment Variables
 ```js
