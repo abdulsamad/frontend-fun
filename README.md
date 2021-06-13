@@ -51,7 +51,7 @@ For more information visit [Vercel CLI docs](https://vercel.com/docs/cli)
 
 ### Screenshot
 
-![Front-end code editor](/readme/screenshot.png "Front-end code editor screenshot")
+![Frontend fun screenshot](/readme/screenshot.png "Frontend fun screenshot")
 
 ### Architechture
 ![project architechture](/readme/architechture.png "project architechture")
