@@ -19,9 +19,20 @@ export const PanelItem = styled.button<PanelItemProps>`
   border: none;
   border-left: ${({ active }) => (active ? '3px solid #fff' : 'none')};
   background-color: ${({ active }) => (active ? '#21252B' : 'transparent')};
+  background-position: center;
+  transition: background 0.8s;
+
+  &:hover {
+    background: #673ab7 radial-gradient(circle, transparent 1%, #9575cd 1%) center/15000%;
+  }
+
+  &:active {
+    background-color: #9575cd;
+    background-size: 100%;
+    transition: background 0s;
+  }
 
   &:focus {
-    border: none;
     outline: none;
   }
 `;
