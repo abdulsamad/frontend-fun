@@ -2,8 +2,9 @@
 Online code editor for HTML, CSS, and JavaScript with live reload
 
 ### :sparkles: Features
-- Preview HTML, CSS, and JavaScript live and use it for practice or mockups.
-- Backup data and Restore from anywhere with UID 
+- Preview HTML, CSS, and JavaScript with live reload and use it for practice or quick mockups
+- Backup data and Restore from anywhere with UID
+- Word Wrap on Code Editor
 
 ### Installation
 Clone the repository
