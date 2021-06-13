@@ -1,9 +1,11 @@
 import { FC } from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import { useAppContext } from '../../context';
 
 import SidebarSection from './Sidebar';
-import { Panel, PanelItem } from './Panel';
+import { Panel, PanelItem, UserId } from './Panel';
 import { Files, FileItem, TopBar, TopBarButton } from './Files';
 import AddLanguageLogo from '../../utils/AddLanguageLogo';
 
@@ -21,7 +23,7 @@ const Sidebar: FC<Props> = ({ id }) => {
     filename.endsWith('js');
 
   const addNewFile = () => {
-    const filename = window.prompt('Please enter file name', 'index.html');
+    const filename = window.prompt('Please enter file name');
 
     if (filename !== '' && filename !== null && isAcceptedFileFormat(filename)) {
       const isFilePresent = filesList.filter((name) => name === filename).length;
@@ -30,7 +32,7 @@ const Sidebar: FC<Props> = ({ id }) => {
       extension = extension === 'js' ? 'javascript' : extension;
 
       if (isFilePresent) {
-        alert('File name should be different');
+        toast.error('File name cannot be same');
         return;
       }
 
@@ -40,7 +42,7 @@ const Sidebar: FC<Props> = ({ id }) => {
         value: '',
       });
     } else if (filename) {
-      alert('File format not supported! Only .html, .css, .js 😔');
+      toast.error('File format not supported! Only .html, .css, .js 😔');
     }
   };
 
@@ -54,8 +56,13 @@ const Sidebar: FC<Props> = ({ id }) => {
       })
         .then((res) => res.json())
         .then(({ _id }) => {
-          alert(
-            `Successfuly updated your saved data.\nYour data will be restored on this computer on revisit.\nYou can also import your saved data by entering ${_id}`
+          toast.dark(
+            <div>
+              Successfuly updated your saved data.
+              <br />
+              You can also import your saved data by entering <UserId>{_id}</UserId> in the import
+              option.
+            </div>
           );
         });
       return false;
@@ -68,8 +75,13 @@ const Sidebar: FC<Props> = ({ id }) => {
       .then((res) => res.json())
       .then(({ _id }) => {
         localStorage.setItem('id', _id);
-        alert(
-          `Successfuly saved your data.\nYour data will be restored on this computer on revisit.\nYou can also import your saved data by entering ${_id}`
+        toast.success(
+          <div>
+            Successfuly saved your data.
+            <br />
+            You can also import your saved data by entering <UserId>{_id}</UserId> in the import
+            option.
+          </div>
         );
       });
   };
@@ -84,6 +96,12 @@ const Sidebar: FC<Props> = ({ id }) => {
 
   return (
     <SidebarSection id={id}>
+      <ToastContainer
+        position="bottom-left"
+        closeOnClick={false}
+        autoClose={false}
+        draggable={false}
+      />
       <Panel>
         <PanelItem active={true}>
           <svg width="24" height="24" viewBox="0 0 24 24">
