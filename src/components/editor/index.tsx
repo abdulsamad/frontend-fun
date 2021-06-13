@@ -36,7 +36,7 @@ const Index: FC<Props> = ({ id }) => {
         <WrapButton
           onClick={() => setWrap((prevState) => !prevState)}
           title="Toggle WordWrap"
-          active={wrap}
+          active={!wrap}
         >
           <svg width="17px" height="16px" viewBox="0 0 17 16">
             <g id="Icons" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
