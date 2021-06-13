@@ -44,6 +44,8 @@ export const FileItem = styled.div<FileItemProps>`
 
   & > div {
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
   }
 
   &:hover {
