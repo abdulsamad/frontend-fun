@@ -55,12 +55,12 @@ const Sidebar: FC<Props> = ({ id }) => {
         body: JSON.stringify({ filesData }),
       })
         .then((res) => res.json())
-        .then(({ _id }) => {
+        .then(({ id }) => {
           toast.dark(
             <div>
               Successfuly updated your saved data.
               <br />
-              You can also import your saved data by entering <UserId>{_id}</UserId> in the import
+              You can also import your saved data by entering <UserId>{id}</UserId> in the import
               option.
             </div>
           );
@@ -73,8 +73,8 @@ const Sidebar: FC<Props> = ({ id }) => {
       body: JSON.stringify({ filesData }),
     })
       .then((res) => res.json())
-      .then(({ _id }) => {
-        localStorage.setItem('id', _id);
+      .then(({ id }) => {
+        localStorage.setItem('id', id);
         toast.success(
           <div>
             Successfuly saved your data.
@@ -90,7 +90,11 @@ const Sidebar: FC<Props> = ({ id }) => {
     const id = window.prompt('Please enter your saved data ID');
 
     if (id) {
-      console.log(id);
+      fetch(`/api/getFilesData?id=${id}`)
+        .then((res) => res.json())
+        .then(({ filesData }) => {
+          console.log(filesData);
+        });
     }
   };
 
