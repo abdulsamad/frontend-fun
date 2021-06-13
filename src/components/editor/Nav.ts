@@ -4,6 +4,7 @@ export const Nav = styled.nav`
   display: flex;
   background-color: #161616;
   color: #d4d4d4;
+  overflow-x: auto;
 `;
 
 interface NavItemProps {
@@ -16,6 +17,23 @@ export const NavItem = styled.button<NavItemProps>`
   padding: 5px 10px;
   display: flex;
   align-items: center;
+
+  &:focus {
+    border: none;
+    outline: none;
+  }
+`;
+
+interface WrapButtonProps {
+  active?: boolean;
+}
+
+export const WrapButton = styled.button<WrapButtonProps>`
+  height: 100%;
+  display: flex;
+  align-items: center;
+  border: none;
+  margin-left: auto;
 
   &:focus {
     border: none;
