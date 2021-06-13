@@ -8,12 +8,12 @@ mongoose.connect(process.env.DATABASE_URI, {
 });
 
 module.exports = (req, res) => {
-  if (req.method !== 'GET') return res.json({ err: 'Only GET requests allowed.' });
-
   const { id } = req.query;
 
-  // _id should be parsed and validated for security reasons
-  filesDataModel.findOne({ id }).exec((err, data) => {
+  if (req.method !== 'GET') return res.json({ err: 'Only GET requests allowed.' });
+
+  // id should be parsed and validated for security reasons
+  filesDataModel.findOne({ _id: id }).exec((err, data) => {
     if (err) return res.json({ err });
 
     return res.json(data);

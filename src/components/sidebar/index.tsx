@@ -50,7 +50,7 @@ const Sidebar: FC<Props> = ({ id }) => {
     const id = localStorage.getItem('id');
 
     if (id) {
-      fetch(`/api/saveFilesData?_id=${id}`, {
+      fetch(`/api/saveFilesData?id=${id}`, {
         method: 'POST',
         body: JSON.stringify({ filesData }),
       })

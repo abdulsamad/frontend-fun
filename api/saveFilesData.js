@@ -13,20 +13,24 @@ module.exports = (req, res) => {
 
   if (req.method !== 'POST') return res.json({ err: 'Only POST requests allowed.' });
 
-  // _id should be parsed and validated for security reasons
+  // id should be parsed and validated for security reasons
   if (id) {
-    filesDataModel.findOneAndUpdate({ id }, body).exec((err, { _id }) => {
+    filesDataModel.updateOne({ _id: id }, body).exec((err) => {
       if (err) return res.json({ err });
 
-      return res.json({ _id });
+      return res.json({ id, msg: 'Successfully updated your data' });
     });
-  } else {
-    const filesData = new filesDataModel(body);
 
-    filesData.save((err, { _id }) => {
-      if (err) return res.json({ err });
-
-      return res.json({ _id });
-    });
+    return;
   }
+
+  // New Data
+
+  const filesData = new filesDataModel(body);
+
+  filesData.save((err, { _id }) => {
+    if (err) return res.json({ err });
+
+    return res.json({ id: _id, msg: 'Successfully saved your data' });
+  });
 };
