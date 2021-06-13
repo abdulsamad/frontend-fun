@@ -13,8 +13,7 @@ interface Props {
 }
 
 const Index: FC<Props> = ({ id }) => {
-  const { filesData, activeFileName, filesList, changeActiveFile, addFileData } = useAppContext();
-  const activeFileData = filesData.filter(({ name }) => name === activeFileName)[0];
+  const { activeFile, filesData, changeActiveFile, addFileData } = useAppContext();
 
   const handleEditorChange = useDebouncedFn((value: any) => {
     addFileData(value);
@@ -23,14 +22,14 @@ const Index: FC<Props> = ({ id }) => {
   return (
     <>
       <Nav>
-        {filesList.map((name) => (
+        {filesData.map((file) => (
           <NavItem
-            key={name}
-            active={name === activeFileName}
-            disabled={name === activeFileName}
-            onClick={() => changeActiveFile(name)}
+            key={file.name}
+            active={file.name === activeFile.name}
+            disabled={file.name === activeFile.name}
+            onClick={() => changeActiveFile(file)}
           >
-            <AddLanguageLogo fileName={name} />
+            <AddLanguageLogo fileName={file.name} />
           </NavItem>
         ))}
       </Nav>
@@ -38,9 +37,9 @@ const Index: FC<Props> = ({ id }) => {
         <Editor
           height="100%"
           theme="vs-dark"
-          defaultLanguage={activeFileData.language}
-          defaultValue={activeFileData.value}
-          path={activeFileData.name}
+          defaultLanguage={activeFile.language}
+          defaultValue={activeFile.value}
+          path={activeFile.name}
           onChange={handleEditorChange}
         />
       </EditorContainer>

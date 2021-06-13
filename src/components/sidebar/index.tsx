@@ -14,7 +14,7 @@ interface Props {
 }
 
 const Sidebar: FC<Props> = ({ id }) => {
-  const { filesData, filesList, activeFileName, changeActiveFile, addFile } = useAppContext();
+  const { filesData, filesList, activeFile, changeActiveFile, addFile } = useAppContext();
 
   const isAcceptedFileFormat = (filename: string) =>
     filename.endsWith('html') ||
@@ -75,7 +75,7 @@ const Sidebar: FC<Props> = ({ id }) => {
       .then((res) => res.json())
       .then(({ id }) => {
         localStorage.setItem('id', id);
-        toast.success(
+        toast.dark(
           <div>
             Successfuly saved your data.
             <br />
@@ -132,15 +132,15 @@ const Sidebar: FC<Props> = ({ id }) => {
             </svg>
           </TopBarButton>
         </TopBar>
-        {filesList.map((name) => (
+        {filesData.map((file) => (
           <FileItem
-            active={name === activeFileName}
-            key={name}
+            active={file.name === activeFile.name}
+            key={file.name}
             onClick={() => {
-              changeActiveFile(name);
+              changeActiveFile(file);
             }}
           >
-            <AddLanguageLogo fileName={name} />
+            <AddLanguageLogo fileName={file.name} />
           </FileItem>
         ))}
       </Files>
