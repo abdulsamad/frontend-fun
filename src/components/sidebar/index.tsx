@@ -79,7 +79,7 @@ const Sidebar: FC<Props> = ({ id }) => {
           <div>
             Successfuly saved your data.
             <br />
-            You can also import your saved data by entering <UserId>{_id}</UserId> in the import
+            You can also import your saved data by entering <UserId>{id}</UserId> in the import
             option.
           </div>
         );
