@@ -53,8 +53,10 @@ const Sidebar: FC<Props> = ({ id }) => {
         body: JSON.stringify({ filesData }),
       })
         .then((res) => res.json())
-        .then(() => {
-          alert('Successfuly updated your saved data');
+        .then(({ _id }) => {
+          alert(
+            `Successfuly updated your saved data.\nYour data will be restored on this computer on revisit.\nYou can also import your saved data by entering ${_id}`
+          );
         });
       return false;
     }
@@ -66,8 +68,18 @@ const Sidebar: FC<Props> = ({ id }) => {
       .then((res) => res.json())
       .then(({ _id }) => {
         localStorage.setItem('id', _id);
-        alert('Successfuly saved your data');
+        alert(
+          `Successfuly saved your data.\nYour data will be restored on this computer on revisit.\nYou can also import your saved data by entering ${_id}`
+        );
       });
+  };
+
+  const getSavedWork = () => {
+    const id = window.prompt('Please enter your saved data ID');
+
+    if (id) {
+      console.log(id);
+    }
   };
 
   return (
@@ -78,9 +90,14 @@ const Sidebar: FC<Props> = ({ id }) => {
             <path d="M13 6c3.469 0 2 5 2 5s5-1.594 5 2v9h-12v-16h5zm.827-2h-7.827v20h16v-11.842c0-2.392-5.011-8.158-8.173-8.158zm.173-2l-3-2h-9v22h2v-20h10z" />
           </svg>
         </PanelItem>
-        <PanelItem title="Save files data" onClick={saveWork}>
+        <PanelItem title="Save data" onClick={saveWork}>
           <svg width="24" height="24" viewBox="0 0 24 24">
             <path d="M13 3h2.996v5h-2.996v-5zm11 1v20h-24v-24h20l4 4zm-17 5h10v-7h-10v7zm15-4.171l-2.828-2.829h-.172v9h-14v-9h-3v20h20v-17.171z" />
+          </svg>
+        </PanelItem>
+        <PanelItem title="Import saved data" onClick={getSavedWork}>
+          <svg width="24" height="24" fillRule="evenodd" clipRule="evenodd">
+            <path d="M8 11h-6v10h20v-10h-6v-2h8v14h-24v-14h8v2zm5 2h4l-5 6-5-6h4v-12h2v12z" />
           </svg>
         </PanelItem>
       </Panel>
