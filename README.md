@@ -12,9 +12,17 @@ Install dependencies
 ```bash
 yarn
 ```
-Vercel CLI is also required to run serverless functions
+or
+```bash
+npm install
 ```
+Vercel CLI is also required to run serverless functions
+```bash
 yarn global add vercel
+```
+or
+```bash
+npm install -g vercel
 ```
 
 ### Environment Variables
