@@ -34,6 +34,7 @@ export const WrapButton = styled.button<WrapButtonProps>`
   align-items: center;
   border: none;
   margin-left: auto;
+  background-color: ${({ active }) => (active ? '' : '#2d2d2d')};
 
   &:focus {
     border: none;

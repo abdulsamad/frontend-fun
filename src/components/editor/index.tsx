@@ -14,7 +14,7 @@ interface Props {
 
 const Index: FC<Props> = ({ id }) => {
   const { activeFile, filesData, changeActiveFile, addFileData } = useAppContext();
-  const [wrap, setWrap] = useState('off');
+  const [wrap, setWrap] = useState(false);
 
   const handleEditorChange = useDebouncedFn((value: any) => {
     addFileData(value);
@@ -34,8 +34,9 @@ const Index: FC<Props> = ({ id }) => {
           </NavItem>
         ))}
         <WrapButton
-          onClick={() => setWrap((prevState) => (prevState === 'off' ? 'on' : 'off'))}
+          onClick={() => setWrap((prevState) => !prevState)}
           title="Toggle WordWrap"
+          active={wrap}
         >
           <svg width="17px" height="16px" viewBox="0 0 17 16">
             <g id="Icons" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
@@ -71,7 +72,7 @@ const Index: FC<Props> = ({ id }) => {
               enabled: false,
             },
             formatOnPaste: true,
-            wordWrap: wrap,
+            wordWrap: wrap ? 'on' : 'off',
             smoothScrolling: true,
           }}
         />
