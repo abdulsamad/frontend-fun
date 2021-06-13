@@ -1,4 +1,4 @@
-## Front-End Code Editor
+## Frontend Fun 
 
 ### Architechture
 <img src="readme/architechture.png" />
