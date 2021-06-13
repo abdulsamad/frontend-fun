@@ -1,6 +1,10 @@
 ## Frontend Fun
 Online code editor for HTML, CSS, and JavaScript with live reload
 
+### :sparkles: Features
+- Preview HTML, CSS, and JavaScript live and use it for practice or mockups.
+- Backup data and Restore from anywhere with UID 
+
 ### Installation
 Clone the repository
 ```bash
