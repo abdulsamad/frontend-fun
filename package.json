@@ -24,6 +24,7 @@
     "xterm-for-react": "^1.0.4"
   },
   "scripts": {
+    "vercel": "vercel dev",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
