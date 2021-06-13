@@ -12,6 +12,7 @@ const initialState: types.IState = {
   removeFile: () => null,
   changeActiveFile: () => null,
   addFileData: () => null,
+  addImportedFilesData: () => null,
 };
 
 const AppContext = createContext<types.IState>(initialState);
@@ -47,10 +48,17 @@ const Context: FC = ({ children }) => {
     });
   };
 
-  const addFileData = (fileData: types.fileData) => {
+  const addFileData = (fileValue: string) => {
     dispatch({
       type: types.ADD_FILE_DATA,
-      payload: fileData,
+      payload: fileValue,
+    });
+  };
+
+  const addImportedFilesData = (filesData: types.fileData[]) => {
+    dispatch({
+      type: types.ADD_IMPORTED_FILES_DATA,
+      payload: filesData,
     });
   };
 
@@ -64,6 +72,7 @@ const Context: FC = ({ children }) => {
         removeFile,
         changeActiveFile,
         addFileData,
+        addImportedFilesData,
       }}
     >
       {children}

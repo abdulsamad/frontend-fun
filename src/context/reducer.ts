@@ -25,9 +25,29 @@ const reducer = (state: types.IState, action: types.Action) => {
       };
 
     case types.ADD_FILE_DATA:
+      const editedFilesData = state.filesData.map((file) => {
+        const { name, language } = file;
+
+        if (name === state.activeFile.name) {
+          return {
+            name,
+            language,
+            value: action.payload,
+          };
+        }
+
+        return file;
+      });
+
       return {
         ...state,
-        filesData: [...state.filesData, action.payload],
+        filesData: editedFilesData,
+      };
+
+    case types.ADD_IMPORTED_FILES_DATA:
+      return {
+        ...state,
+        filesData: action.payload,
       };
 
     default:
