@@ -1,6 +1,5 @@
 import { FC, useEffect, useRef, useState } from 'react';
 import { XTerm } from 'xterm-for-react';
-import 'xterm/css/xterm.css';
 
 import { useAppContext } from '../../context';
 
