@@ -113,7 +113,7 @@ const Sidebar: FC<Props> = ({ id }) => {
       fetch(`/api/getFilesData?id=${id}`)
         .then((res) => res.json())
         .then(({ filesData }) => {
-          addImportedFilesData(filesData);
+          if (filesData) addImportedFilesData(filesData);
         });
     }
   };
