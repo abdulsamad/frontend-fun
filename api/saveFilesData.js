@@ -13,7 +13,7 @@ module.exports = (req, res) => {
 
   if (req.method !== 'POST') return res.json({ err: 'Only POST requests allowed.' });
 
-  // id should be parsed and validated for security reasons
+  // id should validated for security reasons
   if (id) {
     filesDataModel.updateOne({ _id: id }, body).exec((err) => {
       if (err) return res.json({ err });

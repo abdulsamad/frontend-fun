@@ -12,7 +12,7 @@ module.exports = (req, res) => {
 
   if (req.method !== 'GET') return res.json({ err: 'Only GET requests allowed.' });
 
-  // id should be parsed and validated for security reasons
+  // id should be and validated for security reasons
   filesDataModel.findOne({ _id: id }).exec((err, data) => {
     if (err) return res.json({ err });
 
