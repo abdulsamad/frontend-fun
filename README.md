@@ -1,8 +1,8 @@
 ## Frontend Fun
-Online code editor for HTML, CSS, and JavaScript with live reload
+Online Web-based code editor for HTML, CSS, and JavaScript with live reload can be used for practice, quick mockups or CSS experiments
 
 ### :sparkles: Features
-- Preview HTML, CSS, and JavaScript with live reload and use it for practice or quick mockups
+- Preview HTML, CSS, and JavaScript with live reload
 - Backup and Restore data from anywhere with UID
 - Offline Support
 - Word Wrap on Code Editor
@@ -10,7 +10,7 @@ Online code editor for HTML, CSS, and JavaScript with live reload
 ### Installation
 Clone the repository
 ```bash
-git clone https://github.com/abdulsamad/front-end_code_editor.git
+git clone https://github.com/abdulsamad/frontend-fun.git
 ```
 
 Install dependencies
