@@ -1,3 +1,5 @@
+import localforage from 'localforage';
+
 import * as types from './types';
 
 const reducer = (state: types.IState, action: types.Action) => {
@@ -38,6 +40,9 @@ const reducer = (state: types.IState, action: types.Action) => {
 
         return file;
       });
+
+      // Adding to IndexDB, WebSQL or LocalStorage
+      localforage.setItem('filesData', editedFilesData);
 
       return {
         ...state,

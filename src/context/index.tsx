@@ -1,4 +1,5 @@
 import { createContext, useContext, useReducer, useEffect, FC } from 'react';
+import localforage from 'localforage';
 
 import reducer from './reducer';
 import * as types from './types';
@@ -21,16 +22,9 @@ const Context: FC = ({ children }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
-    const id = localStorage.getItem('id');
-
-    // Check previous data is saved
-    if (id) {
-      fetch(`/api/getFilesData?id=${id}`)
-        .then((res) => res.json())
-        .then(({ filesData }) => {
-          if (filesData) addImportedFilesData(filesData);
-        });
-    }
+    localforage.getItem('filesData').then((filesData: any) => {
+      if (filesData) addImportedFilesData(filesData);
+    });
   }, []);
 
   const addFile = (fileData: types.fileData) => {
