@@ -54,5 +54,5 @@ For more information visit [Vercel CLI docs](https://vercel.com/docs/cli)
 
 ![Frontend fun screenshot](/readme/screenshot.png "Frontend fun screenshot")
 
-### Architechture
-![project architechture](/readme/architechture.png "project architechture")
+<!-- ### Architechture
+![project architechture](/readme/architechture.png "project architechture") -->
