@@ -120,8 +120,9 @@ const Sidebar: FC<Props> = ({ id }) => {
         .then(res => res.json())
         .then(({ filesData }) => {
           if (filesData) {
-            addImportedFilesData(filesData);
+            localStorage.setItem('id', id);
             localforage.setItem('filesData', filesData);
+            addImportedFilesData(filesData);
           }
         });
     }
