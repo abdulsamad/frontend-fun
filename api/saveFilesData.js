@@ -8,14 +8,14 @@ mongoose.connect(process.env.DATABASE_URI, {
 });
 
 module.exports = (req, res) => {
-  const body = JSON.parse(req.body);
   const { id } = req.query;
+  const body = req.body;
 
   if (req.method !== 'POST') return res.json({ err: 'Only POST requests allowed.' });
 
   // id should validated for security reasons
   if (id) {
-    filesDataModel.updateOne({ _id: id }, body).exec((err) => {
+    filesDataModel.updateOne({ _id: id }, body).exec(err => {
       if (err) return res.json({ err });
 
       return res.json({ id, msg: 'Successfully updated your data' });

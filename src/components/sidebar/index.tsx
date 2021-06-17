@@ -1,5 +1,6 @@
 import { FC, MouseEvent } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
+import localforage from 'localforage';
 
 import { useAppContext } from '../../context';
 
@@ -33,7 +34,7 @@ const Sidebar: FC<Props> = ({ id }) => {
     const filename = window.prompt('Please enter file name');
 
     if (filename !== '' && filename !== null && isAcceptedFileFormat(filename)) {
-      const isFilePresent = filesList.filter((name) => name === filename).length;
+      const isFilePresent = filesList.filter(name => name === filename).length;
       let extension = filename.toLowerCase().split('.').pop() as string;
       // Because js === javascript in Monaco
       extension = extension === 'js' ? 'javascript' : extension;
@@ -65,13 +66,18 @@ const Sidebar: FC<Props> = ({ id }) => {
 
   const saveWork = () => {
     const id = localStorage.getItem('id');
+    const headers = {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    };
 
     if (id) {
       fetch(`/api/saveFilesData?id=${id}`, {
         method: 'POST',
+        headers,
         body: JSON.stringify({ filesData }),
       })
-        .then((res) => res.json())
+        .then(res => res.json())
         .then(({ id }) => {
           toast.dismiss();
           toast.dark(
@@ -80,7 +86,7 @@ const Sidebar: FC<Props> = ({ id }) => {
               <br />
               You can also import your saved data from anywhere by entering <UserId>{id}</UserId> in
               the import option.
-            </div>
+            </div>,
           );
         });
       return false;
@@ -88,9 +94,10 @@ const Sidebar: FC<Props> = ({ id }) => {
 
     fetch('/api/saveFilesData', {
       method: 'POST',
+      headers,
       body: JSON.stringify({ filesData }),
     })
-      .then((res) => res.json())
+      .then(res => res.json())
       .then(({ id }) => {
         localStorage.setItem('id', id);
         toast.dismiss();
@@ -100,7 +107,7 @@ const Sidebar: FC<Props> = ({ id }) => {
             <br />
             You can also import your saved data from anywhere by entering <UserId>{id}</UserId> in
             the import option.
-          </div>
+          </div>,
         );
       });
   };
@@ -110,9 +117,12 @@ const Sidebar: FC<Props> = ({ id }) => {
 
     if (id) {
       fetch(`/api/getFilesData?id=${id}`)
-        .then((res) => res.json())
+        .then(res => res.json())
         .then(({ filesData }) => {
-          if (filesData) addImportedFilesData(filesData);
+          if (filesData) {
+            addImportedFilesData(filesData);
+            localforage.setItem('filesData', filesData);
+          }
         });
     }
   };
@@ -151,7 +161,7 @@ const Sidebar: FC<Props> = ({ id }) => {
             </svg>
           </TopBarButton>
         </TopBar>
-        {filesData.map((file) => (
+        {filesData.map(file => (
           <FileItem
             active={file.name === activeFile.name}
             key={file.name}
@@ -160,7 +170,7 @@ const Sidebar: FC<Props> = ({ id }) => {
             <div>
               <AddLanguageLogo fileName={file.name} />
             </div>
-            <DeleteButton title="Delete file" onClick={(ev) => deleteFile(ev, file.name)}>
+            <DeleteButton title="Delete file" onClick={ev => deleteFile(ev, file.name)}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="#f5f5f5">
                 <path d="M3 6l3 18h12l3-18h-18zm19-4v2h-20v-2h5.711c.9 0 1.631-1.099 1.631-2h5.316c0 .901.73 2 1.631 2h5.711z" />
               </svg>
