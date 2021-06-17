@@ -25,6 +25,11 @@
     "web-vitals": "^1.0.1",
     "xterm-for-react": "^1.0.4"
   },
+  "devDependencies": {
+    "@types/mongoose": "^5.11.97",
+    "@types/styled-components": "^5.1.10",
+    "@vercel/node": "^1.11.1"
+  },
   "scripts": {
     "vercel": "vercel dev",
     "start": "react-scripts start",
@@ -49,8 +54,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@types/styled-components": "^5.1.10"
   }
 }
