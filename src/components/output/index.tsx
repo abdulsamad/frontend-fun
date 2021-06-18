@@ -12,7 +12,7 @@ interface Props {
 }
 
 const Output: FC<Props> = ({ id }) => {
-  const { filesData } = useAppContext();
+  const { filesData, activeFile } = useAppContext();
   const iFrameRef = useRef<HTMLIFrameElement>(null);
   const { allFilesHTMLCombined, allFilesCSSCombined, allFilesJSCombined } =
     ConvertArrToString(filesData);
@@ -32,11 +32,13 @@ const Output: FC<Props> = ({ id }) => {
       outputIframeDocument.body.appendChild(style);
 
       // Append Javascript to iFrame
-      const script = document.createElement('script') as HTMLScriptElement;
-      script.innerHTML = allFilesJSCombined;
-      outputIframeDocument.body.appendChild(script);
+      if (activeFile.language === 'javascript') {
+        const script = document.createElement('script') as HTMLScriptElement;
+        script.innerHTML = allFilesJSCombined;
+        outputIframeDocument.body.appendChild(script);
+      }
     }
-  }, [allFilesCSSCombined, allFilesHTMLCombined, allFilesJSCombined]);
+  }, [allFilesCSSCombined, allFilesHTMLCombined, allFilesJSCombined, activeFile]);
 
   return (
     <OutputContainer id={id}>
