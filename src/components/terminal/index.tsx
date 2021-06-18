@@ -87,7 +87,7 @@ const Terminal: FC<Props> = ({ id }) => {
       case 127:
         // Backspace
         if (terminalText) {
-          xterm.terminal.write('\x1b[D');
+          xterm.terminal.write('\b \b');
           setTerminalText((prevState) => prevState.substring(0, prevState.length - 1));
         }
         break;
