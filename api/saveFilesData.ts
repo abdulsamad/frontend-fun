@@ -17,21 +17,19 @@ module.exports = (req: VercelRequest, res: VercelResponse) => {
   // id should validated for security reasons
   if (id) {
     // Update Saved Data
-    filesDataModel.updateOne({ _id: id }, body).exec((err) => {
-      if (err) return res.status(500).json({ err });
-
-      return res.json({ id, msg: 'Successfully updated your data' });
-    });
-
+    filesDataModel
+      .updateOne({ _id: id }, body)
+      .exec()
+      .then(() => res.json({ id, msg: 'Successfully updated your data' }))
+      .catch((err) => res.status(500).json({ err }));
     return;
   }
 
   // Save New Data
   const filesData = new filesDataModel(body);
 
-  filesData.save((err, { _id }) => {
-    if (err) return res.status(500).json({ err });
-
-    return res.json({ id: _id, msg: 'Successfully saved your data' });
-  });
+  filesData
+    .save()
+    .then(({ _id }) => res.json({ id: _id, msg: 'Successfully saved your data' }))
+    .catch((err) => res.status(500).json({ err }));
 };

@@ -14,9 +14,9 @@ module.exports = (req: VercelRequest, res: VercelResponse) => {
   if (req.method !== 'GET') return res.status(400).json({ err: 'Only GET requests allowed.' });
 
   // id should be and validated for security reasons
-  filesDataModel.findOne({ _id: id }).exec((err, data) => {
-    if (err) return res.json({ err });
-
-    return res.json(data);
-  });
+  filesDataModel
+    .findOne({ _id: id })
+    .exec()
+    .then((data) => res.json(data))
+    .catch((err) => res.json({ err }));
 };
