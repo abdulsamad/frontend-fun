@@ -1,6 +1,7 @@
 import { FC, MouseEvent } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import localforage from 'localforage';
+import { useThrottledFn } from 'beautiful-react-hooks';
 
 import { useAppContext } from '../../context';
 
@@ -64,7 +65,7 @@ const Sidebar: FC<Props> = ({ id }) => {
     }
   };
 
-  const saveWork = () => {
+  const saveWork = useThrottledFn(() => {
     const id = localStorage.getItem('id');
     const headers = {
       'Content-Type': 'application/json',
@@ -110,7 +111,7 @@ const Sidebar: FC<Props> = ({ id }) => {
           </div>,
         );
       });
-  };
+  }, 1500);
 
   const getSavedWork = () => {
     const id = window.prompt('Please enter your saved data ID');
