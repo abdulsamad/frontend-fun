@@ -1,7 +1,6 @@
 import { FC, MouseEvent } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import localforage from 'localforage';
-import { useThrottledFn } from 'beautiful-react-hooks';
 
 import { useAppContext } from '../../context';
 
@@ -61,16 +60,26 @@ const Sidebar: FC<Props> = ({ id }) => {
 
     if (doDelete) {
       removeFile(filename);
-      //
     }
   };
 
-  const saveWork = useThrottledFn(() => {
+  const saveWork = (ev: MouseEvent) => {
+    const elem = ev.target as HTMLButtonElement;
     const id = localStorage.getItem('id');
     const headers = {
       'Content-Type': 'application/json',
       Accept: 'application/json',
     };
+    const errorFn = () => {
+      elem.disabled = false;
+      elem.style.cursor = 'pointer';
+      toast.dismiss();
+      toast.error(`Sorry! unable to save your data`);
+    };
+
+    // Disable button
+    elem.disabled = true;
+    elem.style.cursor = 'progress';
 
     if (id) {
       fetch(`/api/saveFilesData?id=${id}`, {
@@ -89,7 +98,11 @@ const Sidebar: FC<Props> = ({ id }) => {
               the import option.
             </div>,
           );
-        });
+
+          elem.disabled = false;
+          elem.style.cursor = 'pointer';
+        })
+        .catch(errorFn);
       return false;
     }
 
@@ -110,8 +123,12 @@ const Sidebar: FC<Props> = ({ id }) => {
             the import option.
           </div>,
         );
-      });
-  }, 1500);
+
+        elem.disabled = false;
+        elem.style.cursor = 'pointer';
+      })
+      .catch(errorFn);
+  };
 
   const getSavedWork = () => {
     const id = window.prompt('Please enter your saved data ID');
@@ -150,17 +167,23 @@ const Sidebar: FC<Props> = ({ id }) => {
       />
       <Panel>
         <PanelItem title="Explorer" active={true}>
-          <svg width="24" height="24" viewBox="0 0 24 24">
+          <svg width="24" height="24" viewBox="0 0 24 24" style={{ pointerEvents: 'none' }}>
             <path d="M13 6c3.469 0 2 5 2 5s5-1.594 5 2v9h-12v-16h5zm.827-2h-7.827v20h16v-11.842c0-2.392-5.011-8.158-8.173-8.158zm.173-2l-3-2h-9v22h2v-20h10z" />
           </svg>
         </PanelItem>
         <PanelItem title="Save data" onClick={saveWork}>
-          <svg width="24" height="24" viewBox="0 0 24 24">
+          <svg width="24" height="24" viewBox="0 0 24 24" style={{ pointerEvents: 'none' }}>
             <path d="M13 3h2.996v5h-2.996v-5zm11 1v20h-24v-24h20l4 4zm-17 5h10v-7h-10v7zm15-4.171l-2.828-2.829h-.172v9h-14v-9h-3v20h20v-17.171z" />
           </svg>
         </PanelItem>
         <PanelItem title="Import saved data" onClick={getSavedWork}>
-          <svg width="24" height="24" fillRule="evenodd" clipRule="evenodd">
+          <svg
+            width="24"
+            height="24"
+            fillRule="evenodd"
+            clipRule="evenodd"
+            style={{ pointerEvents: 'none' }}
+          >
             <path d="M8 11h-6v10h20v-10h-6v-2h8v14h-24v-14h8v2zm5 2h4l-5 6-5-6h4v-12h2v12z" />
           </svg>
         </PanelItem>
