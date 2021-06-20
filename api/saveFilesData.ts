@@ -1,18 +1,16 @@
-import mongoose from 'mongoose';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
+import { connectToDatabase } from './db';
 import filesDataModel from '../model/FilesData';
-
-mongoose.connect(process.env.DATABASE_URI as string, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
 
 module.exports = (req: VercelRequest, res: VercelResponse) => {
   const { id } = req.query;
   const body = req.body;
 
   if (req.method !== 'POST') return res.status(400).json({ err: 'Only POST requests allowed.' });
+
+  // Connect to DB
+  connectToDatabase();
 
   // id should validated for security reasons
   if (id) {
