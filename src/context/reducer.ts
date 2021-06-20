@@ -62,6 +62,7 @@ const reducer = (state: types.IState, action: types.Action) => {
         ...state,
         activeFile: action.payload[0],
         filesData: action.payload,
+        filesList: action.payload.map(({ name }) => name),
       };
 
     default:
