@@ -5,6 +5,9 @@ import * as types from './types';
 const reducer = (state: types.IState, action: types.Action) => {
   switch (action.type) {
     case types.ADD_FILE:
+      // Updating to IndexDB, WebSQL or LocalStorage
+      localforage.setItem('filesData', [...state.filesData, action.payload]);
+
       return {
         ...state,
         activeFile: action.payload,
@@ -13,10 +16,15 @@ const reducer = (state: types.IState, action: types.Action) => {
       };
 
     case types.REMOVE_FILE:
+      const removedfilesData = state.filesData.filter(({ name }) => name !== action.payload);
+
+      // Updating to IndexDB, WebSQL or LocalStorage
+      localforage.setItem('filesData', removedfilesData);
+
       return {
         ...state,
         filesList: state.filesList.filter((filename) => filename !== action.payload),
-        filesData: state.filesData.filter(({ name }) => name !== action.payload),
+        filesData: removedfilesData,
         activeFile: state.filesData[0],
       };
 
