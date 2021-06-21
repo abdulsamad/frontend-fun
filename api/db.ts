@@ -6,11 +6,11 @@ let isConnected: any;
 
 export const connectToDatabase = () => {
   if (isConnected) {
-    // console.log('=> using existing database connection');
+    console.log('=> Using existing database connection');
     return Promise.resolve();
   }
 
-  // console.log('=> using new database connection');
+  console.log('=> Using new database connection');
   return mongoose
     .connect(process.env.DATABASE_URI as string, {
       useNewUrlParser: true,
