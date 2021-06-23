@@ -81,7 +81,15 @@ const Terminal: FC<Props> = ({ id }) => {
           xterm.terminal.write(terminalHostname);
           setTerminalText('');
         });
+        break;
 
+      case 27:
+        // Filter up and down arrow press
+        if (data.endsWith('A') || data.endsWith('B')) return;
+
+        // Write to terminal on left and right arrow press
+        xterm.terminal.write(data);
+        setTerminalText((prevState) => prevState + data);
         break;
 
       case 127:
