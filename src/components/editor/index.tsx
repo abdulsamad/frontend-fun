@@ -1,6 +1,7 @@
 import { FC, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { useDebouncedFn } from 'beautiful-react-hooks';
+import { emmetHTML, emmetCSS } from 'emmet-monaco-es';
 
 import { useAppContext } from '../../context';
 
@@ -19,6 +20,11 @@ const Index: FC<Props> = ({ id }) => {
   const handleEditorChange = useDebouncedFn((value: any) => {
     addFileData(value);
   }, 1000);
+
+  const handleOnMount = () => {
+    emmetHTML((window as any).monaco);
+    emmetCSS((window as any).monaco);
+  };
 
   return (
     <>
@@ -60,17 +66,19 @@ const Index: FC<Props> = ({ id }) => {
       </Nav>
       <EditorContainer id={id}>
         <Editor
-          height="100%"
           theme="vs-dark"
           defaultLanguage={activeFile.language}
           value={activeFile.value}
           path={activeFile.name}
           onChange={handleEditorChange}
+          onMount={handleOnMount}
           options={{
-            fontSize: 16,
             minimap: {
               enabled: false,
             },
+            fontSize: 16,
+            fontFamily: 'Fira Code',
+            fontLigatures: true,
             formatOnPaste: true,
             wordWrap: wrap ? 'on' : 'off',
             smoothScrolling: true,
