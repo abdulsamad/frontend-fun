@@ -17,7 +17,9 @@ const Terminal: FC<Props> = ({ id }) => {
   const terminalHostname = `$root@${document.domain}~`;
 
   useEffect(() => {
-    xTermRef.current?.terminal.writeln('Enter "help" to see the list of supported commands');
+    xTermRef.current?.terminal.writeln(
+      'Enter "help" to see the list of supported commands\r\n\rPress (Ctrl + L) to clear the console',
+    );
     xTermRef.current?.terminal.write(terminalHostname);
   }, [terminalHostname]);
 
