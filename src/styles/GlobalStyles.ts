@@ -6,7 +6,7 @@ const GlobalStyle = createGlobalStyle`
   @font-face {
     font-family: 'Fira Code';
     src: local('Fira Code'),
-    url(${FiraCode}) format('ttf');
+    url(${FiraCode}) format('truetype');
   }
 
   body {
