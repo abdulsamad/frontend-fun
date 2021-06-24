@@ -1,5 +1,6 @@
 import { FC, useEffect, useRef, useState } from 'react';
 import { XTerm } from 'xterm-for-react';
+import { FitAddon } from 'xterm-addon-fit';
 
 import { useAppContext } from '../../context';
 
@@ -14,13 +15,14 @@ const Terminal: FC<Props> = ({ id }) => {
   const { filesList, addFile, removeFile } = useAppContext();
   const [terminalText, setTerminalText] = useState('');
   const xTermRef = useRef<XTerm | null>(null);
+  const fitAddon = new FitAddon();
   const terminalHostname = `$root@${document.domain}~`;
 
   useEffect(() => {
-    xTermRef.current?.terminal.writeln(
-      'Enter "help" to see the list of supported commands\r\n\rPress (Ctrl + L) to clear the console',
-    );
+    // prettier-ignore
+    xTermRef.current?.terminal.writeln('Enter "help" to see the list of supported commands\r\n\rPress (Ctrl + L) to clear the console');
     xTermRef.current?.terminal.write(terminalHostname);
+    (xTermRef.current as any).props.addons.shift().fit();
   }, [terminalHostname]);
 
   const onData = (data: any) => {
@@ -112,10 +114,11 @@ const Terminal: FC<Props> = ({ id }) => {
   return (
     <TerminalContainer id={id}>
       <XTerm
+        className="terminal-container"
         ref={xTermRef}
+        addons={[fitAddon]}
         onData={onData}
         options={{
-          windowOptions: { fullscreenWin: true },
           theme: { background: '#131313', cursor: '#00FF00', foreground: '#00FF00' },
         }}
       />
