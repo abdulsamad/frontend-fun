@@ -25,10 +25,7 @@ const Sidebar: FC<Props> = ({ id }) => {
   } = useAppContext();
 
   const isAcceptedFileFormat = (filename: string) =>
-    filename.endsWith('html') ||
-    filename.endsWith('htm') ||
-    filename.endsWith('css') ||
-    filename.endsWith('js');
+    filename.endsWith('html') || filename.endsWith('css') || filename.endsWith('js');
 
   const addNewFile = () => {
     const filename = window.prompt('Please enter file name');
