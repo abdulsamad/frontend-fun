@@ -5,10 +5,8 @@ import FiraCode from '../assets/FiraCode.ttf';
 const GlobalStyle = createGlobalStyle`
   @font-face {
     font-family: 'Fira Code';
-    src: local('Fira Code'), local('Fira'),
+    src: local('Fira Code'),
     url(${FiraCode}) format('ttf');
-    font-weight: 300;
-    font-style: normal;
   }
 
   body {
