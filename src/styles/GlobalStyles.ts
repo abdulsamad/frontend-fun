@@ -1,10 +1,21 @@
 import { createGlobalStyle } from 'styled-components';
 
+import FiraCode from '../assets/FiraCode.ttf';
+
 const GlobalStyle = createGlobalStyle`
+  @font-face {
+    font-family: 'Fira Code';
+    src: local('Fira Code'), local('Fira'),
+    url(${FiraCode}) format('ttf');
+    font-weight: 300;
+    font-style: normal;
+  }
+
   body {
     height: 100vh;
 		width: 100vw;
 		overflow: hidden;
+    font-family: 'Open Sans', Arial, Helvetica, sans-serif;
   }
 
   .gutter {
