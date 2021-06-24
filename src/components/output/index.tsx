@@ -1,4 +1,4 @@
-import { FC, useRef, useEffect } from 'react';
+import { FC, useRef } from 'react';
 
 import { useAppContext } from '../../context';
 
@@ -17,28 +17,18 @@ const Output: FC<Props> = ({ id }) => {
   const { allFilesHTMLCombined, allFilesCSSCombined, allFilesJSCombined } =
     ConvertArrToString(filesData);
 
-  useEffect(() => {
-    const outputIframeDocument = (iFrameRef.current as HTMLIFrameElement).contentWindow?.document;
-
-    if (outputIframeDocument) {
-      outputIframeDocument.body.innerHTML = '';
-
-      // Append HTML to iFrame
-      outputIframeDocument.body.innerHTML += allFilesHTMLCombined;
-
-      // Append CSS to iFrame
-      const style = document.createElement('style') as HTMLStyleElement;
-      style.innerHTML = allFilesCSSCombined;
-      outputIframeDocument.body.appendChild(style);
-
-      // Append Javascript to iFrame
-      if (activeFile.language === 'javascript') {
-        const script = document.createElement('script') as HTMLScriptElement;
-        script.innerHTML = allFilesJSCombined;
-        outputIframeDocument.body.appendChild(script);
-      }
-    }
-  }, [allFilesCSSCombined, allFilesHTMLCombined, allFilesJSCombined, activeFile]);
+  const srcDoc = `
+  <html>
+    <head>
+      <style>${allFilesCSSCombined}</style>
+    </head>
+    <body>
+      ${allFilesHTMLCombined}
+      <script>
+        ${activeFile.language === 'javascript' && allFilesJSCombined}
+      </script>
+    </body>
+  </html>`;
 
   return (
     <OutputContainer id={id}>
@@ -50,7 +40,7 @@ const Output: FC<Props> = ({ id }) => {
           <Address>127.0.0.1</Address>
         </Addressbar>
       </Nav>
-      <Iframe name="output-iframe" ref={iFrameRef} title="code output" />
+      <Iframe name="output-iframe" srcDoc={srcDoc} ref={iFrameRef} title="code output" />
     </OutputContainer>
   );
 };
