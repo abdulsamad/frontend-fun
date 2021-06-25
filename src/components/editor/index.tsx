@@ -8,6 +8,7 @@ import { useAppContext } from '../../context';
 import EditorContainer from './Editor';
 import { Nav, NavItem, WrapButton } from './Nav';
 import AddLanguageLogo from '../../utils/AddLanguageLogo';
+import { customTheme } from './themes';
 
 interface Props {
   id: string;
@@ -28,34 +29,7 @@ const Index: FC<Props> = ({ id }) => {
 
   const handleBeforeMount = (ev: any) => {
     // Add theme
-    ev.editor.defineTheme('one-dark-pro', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [],
-      colors: {
-        'editor.background': '#131313',
-        'editor.foreground': '#ABB2BF',
-        'editor.lineHighlightBackground': '#99BBFF0A',
-        'editor.selectionBackground': '#3E4451',
-        'editorCursor.foreground': '#528BFF',
-        'editor.findMatchHighlightBackground': '#528BFF3D',
-        'editorGroup.background': '#21252B',
-        'editorGroup.border': '#181A1F',
-        'editorGroupHeader.tabsBackground': '#21252B',
-        'editorIndentGuide.background': '#ABB2BF26',
-        'editorLineNumber.foreground': '#636D83',
-        'editorLineNumber.activeForeground': '#ABB2BF',
-        'editorWhitespace.foreground': '#ABB2BF26',
-        'editorRuler.foreground': '#ABB2BF26',
-        'editorHoverWidget.background': '#21252B',
-        'editorHoverWidget.border': '#181A1F',
-        'editorSuggestWidget.background': '#21252B',
-        'editorSuggestWidget.border': '#181A1F',
-        'editorSuggestWidget.selectedBackground': '#2C313A',
-        'editorWidget.background': '#21252B',
-        'editorWidget.border': '#3A3F4B',
-      },
-    });
+    ev.editor.defineTheme('one-dark-pro', customTheme);
   };
 
   return (
