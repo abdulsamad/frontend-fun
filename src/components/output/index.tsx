@@ -16,7 +16,6 @@ const Output: FC<Props> = ({ id }) => {
   const iFrameRef = useRef<HTMLIFrameElement>(null);
   const { allFilesHTMLCombined, allFilesCSSCombined, allFilesJSCombined } =
     ConvertArrToString(filesData);
-
   const srcDoc = `
   <html>
     <head>
@@ -29,6 +28,8 @@ const Output: FC<Props> = ({ id }) => {
       </script>
     </body>
   </html>`;
+
+  if (process.env.NODE_ENV === 'production') console.clear();
 
   return (
     <OutputContainer id={id}>
