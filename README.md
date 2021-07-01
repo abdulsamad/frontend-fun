@@ -1,5 +1,5 @@
 ## Frontend Fun
-Online Web-based code editor for HTML, CSS, and JavaScript with live reload can be used for practice, quick mockups or CSS experiments
+Online Web-based code editor for HTML, CSS, and JavaScript with live reload can be used for practice, quick mockups, or CSS experiments
 
 ### :sparkles: Features
 - Preview HTML, CSS, and JavaScript with live reload
