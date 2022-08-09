@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect, FC } from 'react';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import localforage from 'localforage';
 
 import reducer from './reducer';
@@ -18,7 +18,7 @@ const initialState: types.IState = {
 
 const AppContext = createContext<types.IState>(initialState);
 
-const Context: FC = ({ children }) => {
+const Context = ({ children }: { children?: React.ReactNode }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
@@ -73,8 +73,7 @@ const Context: FC = ({ children }) => {
         changeActiveFile,
         addFileData,
         addImportedFilesData,
-      }}
-    >
+      }}>
       {children}
     </AppContext.Provider>
   );
