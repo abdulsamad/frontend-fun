@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 mongoose.Promise = global.Promise;
 
@@ -6,11 +6,12 @@ let isConnected: any;
 
 export const connectToDatabase = () => {
   if (isConnected) {
-    console.log('=> Using existing database connection');
+    console.log("=> Using existing database connection");
     return Promise.resolve();
   }
 
-  console.log('=> Using new database connection');
+  console.log("=> Using new database connection");
+
   return mongoose
     .connect(process.env.DATABASE_URI as string, {
       useNewUrlParser: true,
