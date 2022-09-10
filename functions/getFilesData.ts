@@ -14,7 +14,7 @@ const handler: Handler = async (event) => {
       };
 
     // Connect to DB
-    connectToDatabase();
+    await connectToDatabase();
 
     // id should be and validated for security reasons
     const savedData = await filesDataModel.findOne({ _id: id }).exec();
