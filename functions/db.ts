@@ -13,7 +13,7 @@ export const connectToDatabase = async () => {
 
     console.log("=> Using new database connection");
 
-    const conn = await mongoose.connect(process.env.DATABASE_URI as string, {
+    const conn = await mongoose.connect(process.env.DATABASE_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
