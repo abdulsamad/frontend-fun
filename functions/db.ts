@@ -4,20 +4,27 @@ mongoose.Promise = global.Promise;
 
 let isConnected: any;
 
-export const connectToDatabase = () => {
-  if (isConnected) {
-    console.log("=> Using existing database connection");
-    return Promise.resolve();
-  }
+export const connectToDatabase = async () => {
+  try {
+    if (isConnected) {
+      console.log("=> Using existing database connection");
+      return Promise.resolve();
+    }
 
-  console.log("=> Using new database connection");
+    console.log("=> Using new database connection");
 
-  return mongoose
-    .connect(process.env.DATABASE_URI as string, {
+    const conn = await mongoose.connect(process.env.DATABASE_URI as string, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-    })
-    .then((db) => {
-      isConnected = db.connections[0].readyState;
     });
+
+    isConnected = conn.connections[0].readyState;
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        err: "Unable to establish a database connection!",
+      }),
+    };
+  }
 };
