@@ -52,7 +52,7 @@ Run **`netlify dev`** command to start local server
 
 For more information visit [Netlify CLI docs](https://docs.netlify.com/cli/get-started/)
 
-> 💡 **Note:** Netlify free plan limits the serverless functions to timeout at 10 seconds. It is possible that sometimes saving data won't work on Netlify free plan. It will work locally.
+> 💡 **Note:** Netlify free plan limits the serverless functions to timeout at 10 seconds. It is possible that sometimes saving data won't work on deployment with Netlify free plan .
 
 ### Screenshot
 
