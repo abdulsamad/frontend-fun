@@ -1,7 +1,7 @@
-[![Netlify Status](https://api.netlify.com/api/v1/badges/9d80dacc-64b1-4d3a-b72a-a29816e953a6/deploy-status)](https://app.netlify.com/sites/frontend-fun/deploys)
-
 ## Frontend Fun
 Online Web-based code editor for HTML, CSS, and JavaScript with live reload can be used for practice, quick mockups, or CSS experiments
+
+[![Netlify Status](https://api.netlify.com/api/v1/badges/9d80dacc-64b1-4d3a-b72a-a29816e953a6/deploy-status)](https://app.netlify.com/sites/frontend-fun/deploys)
 
 ### :sparkles: Features
 - Preview HTML, CSS, and JavaScript with live reload
