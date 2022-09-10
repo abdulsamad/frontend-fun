@@ -1,3 +1,5 @@
+[![Netlify Status](https://api.netlify.com/api/v1/badges/9d80dacc-64b1-4d3a-b72a-a29816e953a6/deploy-status)](https://app.netlify.com/sites/frontend-fun/deploys)
+
 ## Frontend Fun
 Online Web-based code editor for HTML, CSS, and JavaScript with live reload can be used for practice, quick mockups, or CSS experiments
 
@@ -22,13 +24,13 @@ or
 ```bash
 npm install
 ```
-Vercel CLI is also required to run serverless functions
+Netlify CLI is also required to run serverless functions
 ```bash
-yarn global add vercel
+yarn global add netlify-cli
 ```
 or
 ```bash
-npm install -g vercel
+npm install -g netlify-cli
 ```
 
 ### Environment Variables
@@ -40,15 +42,15 @@ DATABASE_URI = /* Your MongoDB URI */
 
 ### Development
 
-If you don't have vercel account, [Create Vercel account](https://vercel.com/dashboard) (You can also login with GitHub, Gitlab &amp; Bitbucket)
+If you don't have Netlify account, [Create Netlify account](https://app.netlify.com/) (You can also login with GitHub, Gitlab &amp; Bitbucket)
 
-Login into Vercel CLI with command `vercel login` and enter the credentials
+Login into Netlify CLI with command `netlify login` and grant access to Netlify CLI
 
-Run **`vercel`** command in project directory and connect project to vercel account
+Run **`netlify link`** command in project directory and link your project to Netlify
 
-Run **`vercel dev`** command to start local server
+Run **`netlify dev`** command to start local server
 
-For more information visit [Vercel CLI docs](https://vercel.com/docs/cli)
+For more information visit [Netlify CLI docs](https://docs.netlify.com/cli/get-started/)
 
 ### Screenshot
 
