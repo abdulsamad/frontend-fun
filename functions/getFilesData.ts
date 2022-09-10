@@ -4,19 +4,30 @@ import { connectToDatabase } from "./db";
 import filesDataModel from "../model/FilesData";
 
 const handler: Handler = async (event) => {
-  const id = (event.queryStringParameters as any).id;
-
-  if (event.httpMethod !== "GET") return { err: "Only GET requests allowed." };
-
-  // Connect to DB
-  connectToDatabase();
-
-  // id should be and validated for security reasons
   try {
+    const id = (event.queryStringParameters as any).id;
+
+    if (event.httpMethod !== "GET")
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ err: "Only GET requests allowed." }),
+      };
+
+    // Connect to DB
+    connectToDatabase();
+
+    // id should be and validated for security reasons
     const savedData = await filesDataModel.findOne({ _id: id }).exec();
-    return savedData;
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify(savedData),
+    };
   } catch (err) {
-    return { err };
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ err: "Internal server error" }),
+    };
   }
 };
 
