@@ -5,7 +5,7 @@ Online web-based code editor for HTML, CSS, and JavaScript with live reload can 
 
 ### :sparkles: Features
 - Preview HTML, CSS, and JavaScript with live reload
-- Backup and Restore data from anywhere with UID
+- Backup and Restore data with UID
 - Offline Support
 - Word Wrap on Code Editor
 
