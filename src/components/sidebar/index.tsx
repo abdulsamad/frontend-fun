@@ -9,11 +9,7 @@ import { Panel, PanelItem, UserId } from './Panel';
 import { Files, FileItem, TopBar, TopBarButton, DeleteButton } from './Files';
 import AddLanguageLogo from '../../utils/AddLanguageLogo';
 
-interface Props {
-	id: string;
-}
-
-const Sidebar: FC<Props> = ({ id }) => {
+const Sidebar: FC = () => {
 	const {
 		filesData,
 		filesList,
@@ -155,7 +151,7 @@ const Sidebar: FC<Props> = ({ id }) => {
 	};
 
 	return (
-		<SidebarSection id={id}>
+		<SidebarSection id='sidebar'>
 			<Panel>
 				<PanelItem title='Explorer' active={true}>
 					<svg width='24' height='24' viewBox='0 0 24 24' style={{ pointerEvents: 'none' }}>

@@ -7,11 +7,7 @@ import { useAppContext } from '../../context';
 import TerminalContainer from './Terminal';
 import commandOuputs from './commands';
 
-interface Props {
-	id: string;
-}
-
-const Terminal: FC<Props> = ({ id }) => {
+const Terminal: FC = () => {
 	const { filesList, addFile, removeFile } = useAppContext();
 	const [terminalText, setTerminalText] = useState('');
 	const xTermRef = useRef<XTerm | null>(null);
@@ -112,7 +108,7 @@ const Terminal: FC<Props> = ({ id }) => {
 	};
 
 	return (
-		<TerminalContainer id={id}>
+		<TerminalContainer id='terminal'>
 			<XTerm
 				className='terminal-container'
 				ref={xTermRef}

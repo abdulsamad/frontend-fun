@@ -40,12 +40,12 @@ const App: FC = () => {
 			/>
 			<Context>
 				<GlobalContainer className='split'>
-					<Sidebar id='sidebar' />
+					<Sidebar />
 					<MiddleContainer id='code' className='split'>
-						<Editor id='editor' />
-						<Terminal id='terminal' />
+						<Editor />
+						<Terminal />
 					</MiddleContainer>
-					<Output id='output' />
+					<Output />
 				</GlobalContainer>
 			</Context>
 		</>
