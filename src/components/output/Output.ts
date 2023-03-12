@@ -1,7 +1,9 @@
 import styled from 'styled-components';
 
 const Output = styled.section`
-  background-color: #ffffff;
+	height: 100%;
+	width: 100%;
+	background-color: #ffffff;
 `;
 
 export default Output;
