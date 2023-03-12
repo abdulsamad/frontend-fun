@@ -4,6 +4,7 @@
 	"private": true,
 	"dependencies": {
 		"@monaco-editor/react": "^4.4.6",
+		"allotment": "^1.18.1",
 		"beautiful-react-hooks": "^3.7.0",
 		"emmet-monaco-es": "^5.2.1",
 		"localforage": "^1.10.0",
