@@ -22,7 +22,7 @@ root.render(
 serviceWorkerRegistration.register({
 	onSuccess: () =>
 		toast.dark(
-			<>
+			<div>
 				<svg width='19' height='18' viewBox='0 0 24 24'>
 					<path
 						fill='#4CAF50'
@@ -30,6 +30,6 @@ serviceWorkerRegistration.register({
 					/>
 				</svg>{' '}
 				Editor Saved for offline use
-			</>,
+			</div>,
 		),
 });
