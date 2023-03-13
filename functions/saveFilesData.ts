@@ -5,8 +5,8 @@ import filesDataModel from '../model/FilesData';
 
 const handler: Handler = async (event) => {
 	try {
-		const id = (event.queryStringParameters as any).id;
-		const body = JSON.parse(event.body as any);
+		const id = event.queryStringParameters?.id;
+		const body = event.body;
 
 		if (event.httpMethod !== 'POST')
 			return {
@@ -14,7 +14,7 @@ const handler: Handler = async (event) => {
 				body: JSON.stringify({ err: 'Only POST requests allowed.' }),
 			};
 
-		if (!body)
+		if (!body || !id)
 			return {
 				statusCode: 400,
 				body: JSON.stringify({ err: 'No data found!' }),
@@ -26,7 +26,7 @@ const handler: Handler = async (event) => {
 		// id should validated for security reasons
 		if (id) {
 			// Update Saved Data
-			await filesDataModel.updateOne({ _id: id }, body).exec();
+			await filesDataModel.updateOne({ _id: id }, JSON.parse(body)).exec();
 
 			return {
 				statusCode: 201,

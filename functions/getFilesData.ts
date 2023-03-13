@@ -5,14 +5,19 @@ import filesDataModel from '../model/FilesData';
 
 const handler: Handler = async (event) => {
 	try {
-		const id = (event.queryStringParameters as any).id;
+		const id = event.queryStringParameters?.id;
 
-		if (event.httpMethod !== 'GET') {
+		if (event.httpMethod !== 'GET')
 			return {
 				statusCode: 400,
 				body: JSON.stringify({ err: 'Only GET requests allowed.' }),
 			};
-		}
+
+		if (!id)
+			return {
+				statusCode: 400,
+				body: JSON.stringify({ err: 'ID is required to get the data' }),
+			};
 
 		// Connect to DB
 		await connectToDatabase();
