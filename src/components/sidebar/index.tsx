@@ -21,13 +21,21 @@ const Sidebar: FC = () => {
 	} = useAppContext();
 
 	const isAcceptedFileFormat = (filename: string) =>
-		filename.endsWith('html') || filename.endsWith('css') || filename.endsWith('js');
+		filename.endsWith('html') ||
+		filename.endsWith('css') ||
+		filename.endsWith('js');
 
 	const addNewFile = () => {
 		const filename = window.prompt('Please enter file name');
 
-		if (filename !== '' && filename !== null && isAcceptedFileFormat(filename)) {
-			const isFilePresent = filesList.filter((name) => name === filename).length;
+		if (
+			filename !== '' &&
+			filename !== null &&
+			isAcceptedFileFormat(filename)
+		) {
+			const isFilePresent = filesList.filter(
+				(name) => name === filename,
+			).length;
 			let extension = filename.toLowerCase().split('.').pop() as string;
 			// Because js === javascript in Monaco
 			extension = extension === 'js' ? 'javascript' : extension;
@@ -49,7 +57,9 @@ const Sidebar: FC = () => {
 
 	const deleteFile = (ev: MouseEvent, filename: string) => {
 		ev.stopPropagation();
-		const doDelete = window.confirm('Are you sure you want to delete this file?');
+		const doDelete = window.confirm(
+			'Are you sure you want to delete this file?',
+		);
 
 		if (doDelete) {
 			removeFile(filename);
@@ -80,15 +90,18 @@ const Sidebar: FC = () => {
 				headers,
 				body: JSON.stringify({ filesData }),
 			})
-				.then((res) => res.json())
+				.then((res) => {
+					if (!res.ok) throw new Error('Server Error');
+					return res.json();
+				})
 				.then(({ id }) => {
 					toast.dismiss();
 					toast.dark(
 						<div>
 							Successfuly updated your saved data.
 							<br />
-							You can also import your saved data from anywhere by entering <UserId>{id}</UserId> in
-							the import option.
+							You can also import your saved data from anywhere by entering{' '}
+							<UserId>{id}</UserId> in the import option.
 						</div>,
 					);
 
@@ -96,7 +109,7 @@ const Sidebar: FC = () => {
 					elem.style.cursor = 'pointer';
 				})
 				.catch(errorFn);
-			return false;
+			return;
 		}
 
 		fetch('/api/saveFilesData', {
@@ -104,16 +117,20 @@ const Sidebar: FC = () => {
 			headers,
 			body: JSON.stringify({ filesData }),
 		})
-			.then((res) => res.json())
+			.then((res) => {
+				if (!res.ok) throw new Error('Server Error');
+				return res.json();
+			})
 			.then(({ id }) => {
-				localStorage.setItem('id', id);
+				if (id) localStorage.setItem('id', id);
+
 				toast.dismiss();
 				toast.dark(
 					<div>
-						Successfuly saved your data.
+						Successfully saved your data.
 						<br />
-						You can also import your saved data from anywhere by entering <UserId>{id}</UserId> in
-						the import option.
+						You can also import your saved data from anywhere by entering{' '}
+						<UserId>{id}</UserId> in the import option.
 					</div>,
 				);
 
@@ -154,12 +171,20 @@ const Sidebar: FC = () => {
 		<SidebarSection id='sidebar'>
 			<Panel>
 				<PanelItem title='Explorer' active={true}>
-					<svg width='24' height='24' viewBox='0 0 24 24' style={{ pointerEvents: 'none' }}>
+					<svg
+						width='24'
+						height='24'
+						viewBox='0 0 24 24'
+						style={{ pointerEvents: 'none' }}>
 						<path d='M13 6c3.469 0 2 5 2 5s5-1.594 5 2v9h-12v-16h5zm.827-2h-7.827v20h16v-11.842c0-2.392-5.011-8.158-8.173-8.158zm.173-2l-3-2h-9v22h2v-20h10z' />
 					</svg>
 				</PanelItem>
 				<PanelItem title='Save data remotely' onClick={saveWork}>
-					<svg width='24' height='24' viewBox='0 0 24 24' style={{ pointerEvents: 'none' }}>
+					<svg
+						width='24'
+						height='24'
+						viewBox='0 0 24 24'
+						style={{ pointerEvents: 'none' }}>
 						<path d='M13 3h2.996v5h-2.996v-5zm11 1v20h-24v-24h20l4 4zm-17 5h10v-7h-10v7zm15-4.171l-2.828-2.829h-.172v9h-14v-9h-3v20h20v-17.171z' />
 					</svg>
 				</PanelItem>
@@ -191,7 +216,9 @@ const Sidebar: FC = () => {
 						<div>
 							<AddLanguageLogo fileName={file.name} />
 						</div>
-						<DeleteButton title='Delete file' onClick={(ev) => deleteFile(ev, file.name)}>
+						<DeleteButton
+							title='Delete file'
+							onClick={(ev) => deleteFile(ev, file.name)}>
 							<svg width='14' height='14' viewBox='0 0 24 24' fill='#f5f5f5'>
 								<path d='M3 6l3 18h12l3-18h-18zm19-4v2h-20v-2h5.711c.9 0 1.631-1.099 1.631-2h5.316c0 .901.73 2 1.631 2h5.711z' />
 							</svg>
