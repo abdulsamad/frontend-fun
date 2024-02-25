@@ -1,4 +1,5 @@
 import { Handler } from '@netlify/functions';
+import mongoose from 'mongoose';
 
 import { connectToDatabase } from './db';
 import filesDataModel from '../model/FilesData';
@@ -17,6 +18,12 @@ const handler: Handler = async (event) => {
 			return {
 				statusCode: 400,
 				body: JSON.stringify({ err: 'ID is required to get the data' }),
+			};
+
+		if (typeof id !== 'string' || !mongoose.Types.ObjectId.isValid(id))
+			return {
+				statusCode: 400,
+				body: JSON.stringify({ err: 'Validation Error' }),
 			};
 
 		// Connect to DB
