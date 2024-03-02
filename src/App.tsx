@@ -15,6 +15,7 @@ import Sidebar from './components/sidebar';
 import Editor from './components/editor';
 import Terminal from './components/terminal';
 import Output from './components/output';
+import MobileMessage from './components/mobile-message';
 
 const App: FC = () => {
 	useEffect(() => {
@@ -47,6 +48,7 @@ const App: FC = () => {
 					</MiddleContainer>
 					<Output />
 				</GlobalContainer>
+				<MobileMessage />
 			</Context>
 		</>
 	);
