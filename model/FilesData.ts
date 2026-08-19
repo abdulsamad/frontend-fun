@@ -1,11 +1,12 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model, models } from 'mongoose';
+import { fileData } from '../src/context/types';
 
 interface IfilesData {
-  filesData: [];
+  filesData: fileData[];
 }
 
 const filesDataSchema: Schema = new Schema({
-  filesData: [],
+  filesData: { type: [Schema.Types.Mixed], required: true },
 });
 
-export default model<IfilesData>('filesData', filesDataSchema);
+export default models.filesData || model<IfilesData>('filesData', filesDataSchema);

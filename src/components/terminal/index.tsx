@@ -1,4 +1,4 @@
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { XTerm } from 'xterm-for-react';
 import { FitAddon } from 'xterm-addon-fit';
 
@@ -6,28 +6,32 @@ import { useAppContext } from '../../context';
 
 import TerminalContainer from './Terminal';
 import commandOuputs from './commands';
+import { getLanguageFromFilename, isValidFilename } from '../../context/validation';
 
 const Terminal: FC = () => {
 	const { filesList, addFile, removeFile } = useAppContext();
 	const [terminalText, setTerminalText] = useState('');
 	const xTermRef = useRef<XTerm | null>(null);
-	const fitAddon = new FitAddon();
-	const terminalHostname = `$root@${window.location.hostname}~`;
+	const fitAddon = useMemo(() => new FitAddon(), []);
+	const terminalHostname = useMemo(() => `$root@${window.location.hostname}~`, []);
 
 	useEffect(() => {
 		// prettier-ignore
 		xTermRef.current?.terminal.writeln('Enter "help" to see the list of supported commands\r\n\rPress (Ctrl + L) to clear the console');
 		xTermRef.current?.terminal.write(terminalHostname);
-		(xTermRef.current as any).props.addons.shift();
-	}, [terminalHostname]);
+		fitAddon.fit();
+		const onResize = () => fitAddon.fit();
+		window.addEventListener('resize', onResize);
+		return () => window.removeEventListener('resize', onResize);
+	}, [fitAddon, terminalHostname]);
 
-	const onData = (data: any) => {
+	const onData = (data: string) => {
 		const xterm = xTermRef.current;
 		const code = data.charCodeAt(0);
-		const touchRegex = new RegExp('(touch\\s[a-zA-Z]{4,50}).(html|htm|css|js)');
-		const rmRegex = new RegExp('(rm\\s[a-zA-Z]{4,50}).(html|htm|css|js)');
+		const touchMatch = terminalText.match(/^touch\s+([^\s]+)$/i);
+		const rmMatch = terminalText.match(/^rm\s+([^\s]+)$/i);
 
-		if (xterm === null || terminalText.length < 0) return;
+		if (xterm === null) return;
 
 		//  clear command
 		if (terminalText === 'clear' || terminalText === 'cls') {
@@ -38,12 +42,15 @@ const Terminal: FC = () => {
 		}
 
 		// touch Command
-		else if (touchRegex.test(terminalText)) {
-			const filename = terminalText.slice(6);
+		else if (touchMatch) {
+			const filename = touchMatch[1];
+			if (!isValidFilename(filename)) {
+				xterm.terminal.write(`\r\n\rError: use a valid .html, .css, or .js filename\r\n\r${terminalHostname}`);
+				setTerminalText('');
+				return;
+			}
 			const isFilePresent = filesList.filter((name) => name === filename).length;
-			let extension = terminalText.toLowerCase().split('.').pop() as string;
-			// Because js === javascript in Monaco
-			extension = extension === 'js' ? 'javascript' : extension;
+			const extension = getLanguageFromFilename(filename);
 
 			if (isFilePresent) {
 				setTerminalText('');
@@ -59,8 +66,15 @@ const Terminal: FC = () => {
 		}
 
 		// rm command
-		else if (rmRegex.test(terminalText)) {
-			removeFile(terminalText.slice(3));
+		else if (rmMatch) {
+			const filename = rmMatch[1];
+			if (!filesList.includes(filename)) {
+				xterm.terminal.write(`\r\n\rError: file not found: ${filename}`);
+				setTerminalText('');
+				xterm.terminal.write(`\r\n\r${terminalHostname}`);
+				return;
+			}
+			removeFile(filename);
 			setTerminalText('');
 			xterm.terminal.write(`\r\n\r${terminalHostname}`);
 			return false;

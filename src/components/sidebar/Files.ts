@@ -23,10 +23,7 @@ export const TopBar = styled.div`
 export const TopBarButton = styled.button`
   border: none;
 
-  &:focus {
-    border: none;
-    outline: none;
-  }
+	&:focus-visible { outline: 2px solid #03a9f4; outline-offset: 2px; }
 `;
 
 interface FileItemProps {
@@ -48,18 +45,13 @@ export const FileItem = styled.div<FileItemProps>`
     align-items: center;
   }
 
-  &:hover {
-    & > button {
-      visibility: visible;
-    }
-  }
+	&:hover > button, &:focus-within > button { visibility: visible; }
 `;
 
 export const DeleteButton = styled.button`
   border: none;
-  visibility: hidden;
+	visibility: hidden;
+	min-width: 30px;
 
-  &:focus {
-    outline: none;
-  }
+	&:focus-visible { outline: 2px solid #03a9f4; }
 `;

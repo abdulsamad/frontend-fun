@@ -1,13 +1,9 @@
-import localforage from 'localforage';
-
 import * as types from './types';
+import { validateFiles } from './validation';
 
-const reducer = (state: types.IState, action: types.Action) => {
+export const reducer = (state: types.IState, action: types.Action): types.IState => {
   switch (action.type) {
     case types.ADD_FILE:
-      // Updating to IndexDB, WebSQL or LocalStorage
-      localforage.setItem('filesData', [...state.filesData, action.payload]);
-
       return {
         ...state,
         activeFile: action.payload,
@@ -18,20 +14,22 @@ const reducer = (state: types.IState, action: types.Action) => {
     case types.REMOVE_FILE:
       const removedfilesData = state.filesData.filter(({ name }) => name !== action.payload);
 
-      // Updating to IndexDB, WebSQL or LocalStorage
-      localforage.setItem('filesData', removedfilesData);
+      if (removedfilesData.length === 0) return state;
+      const nextActive = state.activeFile.name === action.payload
+        ? removedfilesData[0]
+        : removedfilesData.find((file) => file.name === state.activeFile.name) || removedfilesData[0];
 
       return {
         ...state,
         filesList: state.filesList.filter((filename) => filename !== action.payload),
         filesData: removedfilesData,
-        activeFile: state.filesData[0],
+        activeFile: nextActive,
       };
 
     case types.CHANGE_FILE:
       return {
         ...state,
-        activeFile: action.payload,
+        activeFile: state.filesData.find((file) => file.name === action.payload.name) || state.activeFile,
       };
 
     case types.ADD_FILE_DATA:
@@ -49,20 +47,20 @@ const reducer = (state: types.IState, action: types.Action) => {
         return file;
       });
 
-      // Adding to IndexDB, WebSQL or LocalStorage
-      localforage.setItem('filesData', editedFilesData);
-
       return {
         ...state,
         filesData: editedFilesData,
+        activeFile: editedFilesData.find((file) => file.name === state.activeFile.name) || state.activeFile,
       };
 
     case types.ADD_IMPORTED_FILES_DATA:
+      const importedFiles = validateFiles(action.payload);
+      if (!importedFiles) return state;
       return {
         ...state,
-        activeFile: action.payload[0],
-        filesData: action.payload,
-        filesList: action.payload.map(({ name }) => name),
+        activeFile: importedFiles[0],
+        filesData: importedFiles,
+        filesList: importedFiles.map(({ name }) => name),
       };
 
     default:

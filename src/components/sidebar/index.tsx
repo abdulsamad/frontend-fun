@@ -1,6 +1,5 @@
 import { FC, MouseEvent } from 'react';
 import { toast } from 'react-toastify';
-import localforage from 'localforage';
 
 import { useAppContext } from '../../context';
 
@@ -8,6 +7,8 @@ import SidebarSection from './Sidebar';
 import { Panel, PanelItem, UserId } from './Panel';
 import { Files, FileItem, TopBar, TopBarButton, DeleteButton } from './Files';
 import AddLanguageLogo from '../../utils/AddLanguageLogo';
+import { getLanguageFromFilename, isValidFilename, validateFiles } from '../../context/validation';
+import { FilesPayload, FilesResponse } from '../../shared/filesContract';
 
 const Sidebar: FC = () => {
 	const {
@@ -20,25 +21,14 @@ const Sidebar: FC = () => {
 		removeFile,
 	} = useAppContext();
 
-	const isAcceptedFileFormat = (filename: string) =>
-		filename.endsWith('html') ||
-		filename.endsWith('css') ||
-		filename.endsWith('js');
-
 	const addNewFile = () => {
-		const filename = window.prompt('Please enter file name');
+		const filename = window.prompt('Please enter file name')?.trim();
 
-		if (
-			filename !== '' &&
-			filename !== null &&
-			isAcceptedFileFormat(filename)
-		) {
+		if (filename && isValidFilename(filename)) {
 			const isFilePresent = filesList.filter(
 				(name) => name === filename,
 			).length;
-			let extension = filename.toLowerCase().split('.').pop() as string;
-			// Because js === javascript in Monaco
-			extension = extension === 'js' ? 'javascript' : extension;
+			const extension = getLanguageFromFilename(filename);
 
 			if (isFilePresent) {
 				toast.error('File name cannot be same');
@@ -66,8 +56,9 @@ const Sidebar: FC = () => {
 		}
 	};
 
-	const saveWork = (ev: MouseEvent) => {
-		const elem = ev.target as HTMLButtonElement;
+	const saveWork = async (ev: MouseEvent) => {
+		const elem = ev.currentTarget as HTMLButtonElement;
+		if (elem.disabled) return;
 		const id = localStorage.getItem('id');
 		const headers = {
 			'Content-Type': 'application/json',
@@ -84,86 +75,40 @@ const Sidebar: FC = () => {
 		elem.disabled = true;
 		elem.style.cursor = 'progress';
 
-		if (id) {
-			fetch(`/api/saveFilesData?id=${id}`, {
+		try {
+			const response = await fetch(id ? `/api/saveFilesData?id=${encodeURIComponent(id)}` : '/api/saveFilesData', {
 				method: 'POST',
 				headers,
-				body: JSON.stringify({ filesData }),
-			})
-				.then((res) => {
-					if (!res.ok) throw new Error('Server Error');
-					return res.json();
-				})
-				.then(({ id }) => {
-					toast.dismiss();
-					toast.dark(
-						<div>
-							Successfuly updated your saved data.
-							<br />
-							You can also import your saved data from anywhere by entering{' '}
-							<UserId>{id}</UserId> in the import option.
-						</div>,
-					);
-
-					elem.disabled = false;
-					elem.style.cursor = 'pointer';
-				})
-				.catch(errorFn);
-			return;
-		}
-
-		fetch('/api/saveFilesData', {
-			method: 'POST',
-			headers,
-			body: JSON.stringify({ filesData }),
-		})
-			.then((res) => {
-				if (!res.ok) throw new Error('Server Error');
-				return res.json();
-			})
-			.then(({ id }) => {
-				if (id) localStorage.setItem('id', id);
-
-				toast.dismiss();
-				toast.dark(
-					<div>
-						Successfully saved your data.
-						<br />
-						You can also import your saved data from anywhere by entering{' '}
-						<UserId>{id}</UserId> in the import option.
-					</div>,
-				);
-
-				elem.disabled = false;
-				elem.style.cursor = 'pointer';
-			})
-			.catch(errorFn);
+				body: JSON.stringify({ filesData } satisfies FilesPayload),
+			});
+			const data = await response.json() as FilesResponse;
+			if (!response.ok || !data.id) throw new Error(data.err || 'Server Error');
+			localStorage.setItem('id', data.id);
+			toast.dismiss();
+			toast.dark(<div>Successfully saved your data.<br />Use <UserId>{data.id}</UserId> to import it later.</div>);
+		} catch { errorFn(); }
+		elem.disabled = false;
+		elem.style.cursor = 'pointer';
 	};
 
-	const getSavedWork = () => {
+	const getSavedWork = async (ev: MouseEvent) => {
+		const elem = ev.currentTarget as HTMLButtonElement;
+		if (elem.disabled) return;
 		const id = window.prompt('Please enter your saved data ID');
 
 		if (id) {
-			fetch(`/api/getFilesData?id=${id}`)
-				.then((res) => res.json())
-				.then(({ filesData }) => {
-					if (filesData) {
-						localStorage.setItem('id', id);
-						localforage.setItem('filesData', filesData);
-						addImportedFilesData(filesData);
-
-						toast.dismiss();
-						toast.dark('Successfuly imported your saved data');
-						return;
-					}
-
-					toast.dismiss();
-					toast.error('Sorry! unable to import your data');
-				})
-				.catch(() => {
-					toast.dismiss();
-					toast.error('Sorry! unable to import your data');
-				});
+			elem.disabled = true;
+			try {
+				const response = await fetch(`/api/getFilesData?id=${encodeURIComponent(id)}`);
+				const data = await response.json() as FilesResponse;
+				const imported = validateFiles(data.filesData);
+				if (!response.ok || !imported) throw new Error(data.err || 'Import failed');
+				if (filesData.some((file) => file.value.length > 0) && !window.confirm('Importing will replace your current local work. Continue?')) return;
+				localStorage.setItem('id', id);
+				addImportedFilesData(imported);
+				toast.dark('Successfully imported your saved data');
+			} catch { toast.error('Sorry! unable to import your data'); }
+			elem.disabled = false;
 		}
 	};
 
@@ -217,6 +162,7 @@ const Sidebar: FC = () => {
 							<AddLanguageLogo fileName={file.name} />
 						</div>
 						<DeleteButton
+							aria-label={`Delete ${file.name}`}
 							title='Delete file'
 							onClick={(ev) => deleteFile(ev, file.name)}>
 							<svg width='14' height='14' viewBox='0 0 24 24' fill='#f5f5f5'>

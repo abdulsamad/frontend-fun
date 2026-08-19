@@ -1,4 +1,4 @@
-import { FC, useRef } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAppContext } from '../../context';
 
@@ -8,10 +8,10 @@ import Iframe from './Iframe';
 import ConvertArrToString from '../../utils/convertArrtoString';
 
 const Output: FC = () => {
-	const { filesData, activeFile } = useAppContext();
-	const iFrameRef = useRef<HTMLIFrameElement>(null);
-	const { allFilesHTMLCombined, allFilesCSSCombined, allFilesJSCombined } =
-		ConvertArrToString(filesData);
+	const { filesData } = useAppContext();
+	const [previewError, setPreviewError] = useState('');
+	const previewId = useRef(`preview-${Math.random().toString(36).slice(2)}`).current;
+	const { allFilesHTMLCombined, allFilesCSSCombined, allFilesJSCombined } = useMemo(() => ConvertArrToString(filesData), [filesData]);
 	const srcDoc = `
   <html>
     <head>
@@ -20,12 +20,25 @@ const Output: FC = () => {
     <body>
       ${allFilesHTMLCombined}
       <script>
-        ${activeFile.language === 'javascript' && allFilesJSCombined}
+        window.addEventListener('error', function (event) {
+          parent.postMessage({ type: 'preview-error', id: '${previewId}', message: event.message || 'Preview runtime error' }, '*');
+        });
+        try { ${allFilesJSCombined} } catch (error) { parent.postMessage({ type: 'preview-error', id: '${previewId}', message: error.message }, '*'); }
       </script>
     </body>
   </html>`;
 
-	if (process.env.NODE_ENV === 'production') console.clear();
+	useEffect(() => {
+		setPreviewError('');
+	}, [srcDoc]);
+
+	useEffect(() => {
+		const onMessage = (event: MessageEvent) => {
+			if (event.data?.type === 'preview-error' && event.data.id === previewId) setPreviewError(String(event.data.message));
+		};
+		window.addEventListener('message', onMessage);
+		return () => window.removeEventListener('message', onMessage);
+	}, [previewId]);
 
 	return (
 		<OutputContainer id='output'>
@@ -37,7 +50,8 @@ const Output: FC = () => {
 					<Address>127.0.0.1</Address>
 				</Addressbar>
 			</Nav>
-			<Iframe name='output-iframe' srcDoc={srcDoc} ref={iFrameRef} title='code output' />
+			{previewError && <div role='alert' style={{ padding: 12, color: '#b00020', background: '#fff' }}>Preview error: {previewError}</div>}
+			<Iframe name='output-iframe' srcDoc={srcDoc} title='code output' sandbox='allow-scripts' />
 		</OutputContainer>
 	);
 };

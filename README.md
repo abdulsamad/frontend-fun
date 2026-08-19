@@ -9,6 +9,18 @@ Online web-based code editor for HTML, CSS, and JavaScript with live reload can 
 - Offline Support
 - Word Wrap on Code Editor
 
+### Usage
+
+Files use names like `index.html`, `styles_v2.css`, or `app-1.js`. Paths, spaces, and unsupported extensions are rejected. The editor autosaves locally through IndexedDB and restores the last valid project after reload. Remote save/import keeps the anonymous ID workflow; importing asks for confirmation when local files contain work.
+
+Terminal shortcuts include `Ctrl+L`/`clear`, `Enter`, and backspace. Supported file commands are anchored as `touch filename.html` and `rm filename.html`. The preview runs in a sandboxed iframe, so preview code cannot access the editor DOM or local storage. Runtime errors are shown above the preview.
+
+### API behavior
+
+`POST /api/saveFilesData` accepts `{ "filesData": File[] }`; add `?id=<ObjectId>` to update an existing project. `GET /api/getFilesData?id=<ObjectId>` imports one. Invalid methods, JSON, IDs, file names, languages, duplicate names, and oversized values receive a `4xx` response; missing saved projects return `404`.
+
+Known limits: projects are capped at 100 files and each file at 500 KB. Remote persistence requires `DATABASE_URI` and a reachable MongoDB instance.
+
 ### Installation
 Clone the repository
 ```bash

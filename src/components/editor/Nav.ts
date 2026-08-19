@@ -18,10 +18,7 @@ export const NavItem = styled.button<NavItemProps>`
   display: flex;
   align-items: center;
 
-  &:focus {
-    border: none;
-    outline: none;
-  }
+	&:focus-visible { outline: 2px solid #03a9f4; outline-offset: -2px; }
 `;
 
 interface WrapButtonProps {
@@ -36,8 +33,5 @@ export const WrapButton = styled.button<WrapButtonProps>`
   margin-left: auto;
   background-color: ${({ active }) => (active ? '' : '#2d2d2d')};
 
-  &:focus {
-    border: none;
-    outline: none;
-  }
+	&:focus-visible { outline: 2px solid #03a9f4; outline-offset: -2px; }
 `;

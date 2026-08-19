@@ -1,6 +1,5 @@
 import { FC, useState } from 'react';
 import Editor from '@monaco-editor/react';
-import useDebouncedCallback from 'beautiful-react-hooks/useDebouncedCallback';
 import { emmetHTML, emmetCSS } from 'emmet-monaco-es';
 
 import { useAppContext } from '../../context';
@@ -14,13 +13,9 @@ const Index: FC = () => {
 	const { activeFile, filesData, changeActiveFile, addFileData } = useAppContext();
 	const [wrap, setWrap] = useState(false);
 
-	const handleEditorChange = useDebouncedCallback(
-		(value: any) => {
-			addFileData(value);
-		},
-		[],
-		1000,
-	);
+	const handleEditorChange = (value?: string) => {
+		addFileData(value ?? '');
+	};
 
 	const handleOnMount = () => {
 		emmetHTML((window as any).monaco);
@@ -70,8 +65,8 @@ const Index: FC = () => {
 			<EditorContainer id='editor'>
 				<Editor
 					theme='one-dark-pro'
-					defaultLanguage={activeFile.language}
-					value={activeFile.value}
+				language={activeFile.language}
+				value={activeFile.value}
 					path={activeFile.name}
 					onChange={handleEditorChange}
 					onMount={handleOnMount}

@@ -1,9 +1,10 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import localforage from 'localforage';
 
 import reducer from './reducer';
 import * as types from './types';
 import { defaultFilesData, defaultFilesList, defaultActiveFile } from './data';
+import { validateFiles } from './validation';
 
 const initialState: types.IState = {
   activeFile: defaultActiveFile,
@@ -22,45 +23,52 @@ const Context = ({ children }: { children?: React.ReactNode }) => {
   const [state, dispatch] = useReducer(reducer, initialState);
 
   useEffect(() => {
-    localforage.getItem('filesData').then((filesData: any) => {
-      if (filesData) addImportedFilesData(filesData);
-    });
+    let mounted = true;
+    localforage.getItem<unknown>('filesData').then((filesData) => {
+      const validFiles = validateFiles(filesData);
+      if (mounted && validFiles) dispatch({ type: types.ADD_IMPORTED_FILES_DATA, payload: validFiles });
+    }).catch(() => undefined);
+    return () => { mounted = false; };
   }, []);
 
-  const addFile = (fileData: types.fileData) => {
+  useEffect(() => {
+    localforage.setItem('filesData', state.filesData).catch(() => undefined);
+  }, [state.filesData]);
+
+  const addFile = useCallback((fileData: types.fileData) => {
     dispatch({
       type: types.ADD_FILE,
       payload: fileData,
     });
-  };
+  }, []);
 
-  const removeFile = (filename: string) => {
+  const removeFile = useCallback((filename: string) => {
     dispatch({
       type: types.REMOVE_FILE,
       payload: filename,
     });
-  };
+  }, []);
 
-  const changeActiveFile = (fileData: types.fileData) => {
+  const changeActiveFile = useCallback((fileData: types.fileData) => {
     dispatch({
       type: types.CHANGE_FILE,
       payload: fileData,
     });
-  };
+  }, []);
 
-  const addFileData = (fileValue: string) => {
+  const addFileData = useCallback((fileValue: string) => {
     dispatch({
       type: types.ADD_FILE_DATA,
       payload: fileValue,
     });
-  };
+  }, []);
 
-  const addImportedFilesData = (filesData: types.fileData[]) => {
+  const addImportedFilesData = useCallback((filesData: types.fileData[]) => {
     dispatch({
       type: types.ADD_IMPORTED_FILES_DATA,
       payload: filesData,
     });
-  };
+  }, []);
 
   return (
     <AppContext.Provider

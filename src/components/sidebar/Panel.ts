@@ -32,9 +32,7 @@ export const PanelItem = styled.button<PanelItemProps>`
     transition: background 0s;
   }
 
-  &:focus {
-    outline: none;
-  }
+	&:focus-visible { outline: 2px solid #03a9f4; outline-offset: -2px; }
 `;
 
 export const UserId = styled.span`

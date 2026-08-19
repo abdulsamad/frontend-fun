@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 mongoose.Promise = global.Promise;
 
-let isConnected: any;
+let isConnected = false;
 
 export const connectToDatabase = async () => {
 	try {
@@ -15,13 +15,9 @@ export const connectToDatabase = async () => {
 
 		const conn = await mongoose.connect(process.env.DATABASE_URI);
 
-		isConnected = conn.connections[0].readyState;
+		isConnected = conn.connections[0].readyState === 1;
 	} catch (err) {
-		return {
-			statusCode: 500,
-			body: JSON.stringify({
-				err: 'Unable to establish a database connection!',
-			}),
-		};
+		isConnected = false;
+		throw new Error('Unable to establish a database connection');
 	}
 };
