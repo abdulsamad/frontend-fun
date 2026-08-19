@@ -2,8 +2,8 @@ name: Keep MongoDB Atlas active
 
 on:
   schedule:
-    # 12:00 AM IST (18:30 UTC on the previous UTC day)
-    - cron: '30 18 * * *'
+    # Every Sunday at 12:00 AM IST (Saturday 18:30 UTC)
+    - cron: '30 18 * * 6'
   workflow_dispatch:
 
 jobs:
