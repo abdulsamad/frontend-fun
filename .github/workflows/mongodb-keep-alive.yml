@@ -1,0 +1,23 @@
+name: Keep MongoDB Atlas active
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping-atlas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping the protected database endpoint
+        env:
+          KEEP_ALIVE_URL: ${{ secrets.KEEP_ALIVE_URL }}
+          KEEP_ALIVE_TOKEN: ${{ secrets.KEEP_ALIVE_TOKEN }}
+        run: |
+          test -n "$KEEP_ALIVE_URL" || { echo "Missing KEEP_ALIVE_URL secret"; exit 1; }
+          test -n "$KEEP_ALIVE_TOKEN" || { echo "Missing KEEP_ALIVE_TOKEN secret"; exit 1; }
+          curl --fail --silent --show-error --retry 3 \
+            --connect-timeout 15 --max-time 45 \
+            -H "x-keep-alive-token: $KEEP_ALIVE_TOKEN" \
+            "$KEEP_ALIVE_URL"

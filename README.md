@@ -21,6 +21,12 @@ Terminal shortcuts include `Ctrl+L`/`clear`, `Enter`, and backspace. Supported f
 
 Known limits: projects are capped at 100 files and each file at 500 KB. Remote persistence requires `DATABASE_URI` and a reachable MongoDB instance.
 
+### MongoDB Atlas keep-alive
+
+The repository includes a daily GitHub Actions workflow that calls `/api/keepAlive`, which performs a real MongoDB `ping`. This prevents an M0/Free Atlas cluster from being considered connection-idle. Configure `KEEP_ALIVE_TOKEN` in Netlify, then add matching `KEEP_ALIVE_URL` (for example, `https://your-site.netlify.app/api/keepAlive`) and `KEEP_ALIVE_TOKEN` repository secrets in GitHub. The workflow can also be run manually from the Actions tab.
+
+This keeps the free cluster from inactivity pausing; it does not bypass Atlas storage, throughput, billing, or account-level limits.
+
 ### Installation
 Clone the repository
 ```bash
