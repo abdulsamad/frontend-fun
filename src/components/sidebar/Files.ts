@@ -46,6 +46,8 @@ export const FileItem = styled.div<FileItemProps>`
   }
 
 	&:hover > button, &:focus-within > button { visibility: visible; }
+
+	&:hover { background-color: #2f2f34; }
 `;
 
 export const DeleteButton = styled.button`
@@ -54,4 +56,10 @@ export const DeleteButton = styled.button`
 	min-width: 30px;
 
 	&:focus-visible { outline: 2px solid #03a9f4; }
+`;
+
+export const FileName = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;

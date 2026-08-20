@@ -17,6 +17,7 @@ export const isValidFile = (file: unknown): file is fileData => {
   const candidate = file as fileData;
   return (
     isValidFilename(candidate.name) &&
+    typeof candidate.language === 'string' &&
     ['html', 'css', 'javascript'].includes(candidate.language.toLowerCase()) &&
     typeof candidate.value === 'string' &&
     candidate.value.length <= MAX_FILE_VALUE_SIZE &&

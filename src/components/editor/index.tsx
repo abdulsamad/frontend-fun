@@ -1,16 +1,16 @@
-import { FC, useState } from 'react';
+import { FC, MouseEvent, useState } from 'react';
 import Editor from '@monaco-editor/react';
 import { emmetHTML, emmetCSS } from 'emmet-monaco-es';
 
 import { useAppContext } from '../../context';
 
 import EditorContainer from './Editor';
-import { Nav, NavItem, WrapButton } from './Nav';
+import { CloseButton, Nav, NavItem, WrapButton } from './Nav';
 import AddLanguageLogo from '../../utils/AddLanguageLogo';
 import { customTheme } from './themes';
 
 const Index: FC = () => {
-	const { activeFile, filesData, changeActiveFile, addFileData } = useAppContext();
+	const { activeFile, filesData, openFiles, changeActiveFile, closeFile, addFileData } = useAppContext();
 	const [wrap, setWrap] = useState(false);
 
 	const handleEditorChange = (value?: string) => {
@@ -22,6 +22,11 @@ const Index: FC = () => {
 		emmetCSS((window as any).monaco);
 	};
 
+	const handleCloseFile = (event: MouseEvent<HTMLButtonElement>, filename: string) => {
+		event.stopPropagation();
+		closeFile(filename);
+	};
+
 	const handleBeforeMount = (ev: any) => {
 		// Add theme
 		ev.editor.defineTheme('one-dark-pro', customTheme);
@@ -30,15 +35,32 @@ const Index: FC = () => {
 	return (
 		<>
 			<Nav>
-				{filesData.map((file) => (
+				{openFiles.map((filename) => {
+					const file = filesData.find((candidate) => candidate.name === filename);
+					if (!file) return null;
+
+					return (
 					<NavItem
 						key={file.name}
+						role='tab'
+						aria-selected={file.name === activeFile.name}
+						tabIndex={file.name === activeFile.name ? 0 : -1}
 						active={file.name === activeFile.name}
-						disabled={file.name === activeFile.name}
-						onClick={() => changeActiveFile(file)}>
+						onClick={() => file.name !== activeFile.name && changeActiveFile(file)}>
 						<AddLanguageLogo fileName={file.name} />
+						<span>{file.name}</span>
+						<CloseButton
+							type='button'
+							disabled={openFiles.length <= 1}
+							tabIndex={0}
+							aria-label={`Close ${file.name}`}
+							title={openFiles.length <= 1 ? 'Keep one file open' : `Close ${file.name}`}
+							onClick={(event) => handleCloseFile(event, file.name)}>
+							×
+						</CloseButton>
 					</NavItem>
-				))}
+					);
+				})}
 				<WrapButton
 					onClick={() => setWrap((prevState) => !prevState)}
 					title='Toggle WordWrap'

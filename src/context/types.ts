@@ -3,8 +3,10 @@ export interface IState {
   activeFile: fileData;
   filesList: string[];
   filesData: fileData[];
+  openFiles: string[];
   addFile: (fileData: fileData) => void;
   removeFile: (filename: string) => void;
+  closeFile: (filename: string) => void;
   changeActiveFile: (fileData: fileData) => void;
   addFileData: (fileValue: string) => void;
   addImportedFilesData: (filesData: fileData[]) => void;
@@ -20,6 +22,7 @@ export interface fileData {
 // Types
 export const ADD_FILE = 'ADD_FILE';
 export const REMOVE_FILE = 'REMOVE_FILE';
+export const CLOSE_FILE = 'CLOSE_FILE';
 export const CHANGE_FILE = 'CHANGE_FILE';
 export const ADD_FILE_DATA = 'ADD_FILE_DATA';
 export const ADD_IMPORTED_FILES_DATA = 'ADD_IMPORTED_FILES_DATA';
@@ -32,6 +35,11 @@ export interface addFile {
 
 export interface removeFile {
   type: 'REMOVE_FILE';
+  payload: string;
+}
+
+export interface closeFile {
+  type: 'CLOSE_FILE';
   payload: string;
 }
 
@@ -51,4 +59,4 @@ export interface addImportedFilesData {
 }
 
 // Types for Reducers Action
-export type Action = addFile | removeFile | changeActiveFile | addFileData | addImportedFilesData;
+export type Action = addFile | removeFile | closeFile | changeActiveFile | addFileData | addImportedFilesData;

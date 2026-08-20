@@ -10,8 +10,10 @@ const initialState: types.IState = {
   activeFile: defaultActiveFile,
   filesList: defaultFilesList,
   filesData: defaultFilesData,
+  openFiles: defaultFilesList,
   addFile: () => null,
   removeFile: () => null,
+  closeFile: () => null,
   changeActiveFile: () => null,
   addFileData: () => null,
   addImportedFilesData: () => null,
@@ -49,6 +51,13 @@ const Context = ({ children }: { children?: React.ReactNode }) => {
     });
   }, []);
 
+  const closeFile = useCallback((filename: string) => {
+    dispatch({
+      type: types.CLOSE_FILE,
+      payload: filename,
+    });
+  }, []);
+
   const changeActiveFile = useCallback((fileData: types.fileData) => {
     dispatch({
       type: types.CHANGE_FILE,
@@ -76,8 +85,10 @@ const Context = ({ children }: { children?: React.ReactNode }) => {
         activeFile: state.activeFile,
         filesList: state.filesList,
         filesData: state.filesData,
+        openFiles: state.openFiles,
         addFile,
         removeFile,
+        closeFile,
         changeActiveFile,
         addFileData,
         addImportedFilesData,
