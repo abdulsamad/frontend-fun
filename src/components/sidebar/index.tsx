@@ -5,7 +5,7 @@ import { useAppContext } from '../../context';
 
 import SidebarSection from './Sidebar';
 import { Panel, PanelItem, UserId } from './Panel';
-import { Files, FileItem, TopBar, TopBarButton, DeleteButton, FileName } from './Files';
+import { Files, FileItem, TopBar, TopBarButton, DeleteButton } from './Files';
 import AddLanguageLogo from '../../utils/AddLanguageLogo';
 import { getLanguageFromFilename, isValidFilename, validateFiles } from '../../context/validation';
 import { FilesPayload, FilesResponse } from '../../shared/filesContract';
@@ -164,7 +164,6 @@ const Sidebar: FC = () => {
 						onClick={() => changeActiveFile(file)}>
 						<div>
 							<AddLanguageLogo fileName={file.name} />
-							<FileName>{file.name}</FileName>
 						</div>
 						<DeleteButton
 							aria-label={`Delete ${file.name}`}

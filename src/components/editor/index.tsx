@@ -48,7 +48,6 @@ const Index: FC = () => {
 						active={file.name === activeFile.name}
 						onClick={() => file.name !== activeFile.name && changeActiveFile(file)}>
 						<AddLanguageLogo fileName={file.name} />
-						<span>{file.name}</span>
 						<CloseButton
 							type='button'
 							disabled={openFiles.length <= 1}
