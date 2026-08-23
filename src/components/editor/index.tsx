@@ -35,7 +35,7 @@ const Index: FC = () => {
 	return (
 		<>
 			<Nav>
-				{openFiles.map((filename) => {
+				{openFiles.length > 1 && openFiles.map((filename) => {
 					const file = filesData.find((candidate) => candidate.name === filename);
 					if (!file) return null;
 
