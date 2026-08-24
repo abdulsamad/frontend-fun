@@ -1,14 +1,13 @@
-import { MongoClient, ObjectId } from 'mongodb';
 import { validateFiles } from '../../src/context/validation';
 import { FilesPayload } from '../../src/shared/filesContract';
 
 export interface Env {
-  DATABASE_URI?: string;
-  DATABASE_NAME?: string;
-  KEEP_ALIVE_TOKEN?: string;
+  PROJECTS: R2Bucket;
 }
 
-type FilesDocument = { _id: ObjectId; filesData: ReturnType<typeof validateFiles> };
+export const MAX_PROJECT_SIZE = 5 * 1024 * 1024;
+const MAX_REQUEST_SIZE = MAX_PROJECT_SIZE + 1024;
+const PROJECT_ID_PATTERN = /^[a-f0-9]{32}$/i;
 
 export const respond = (status: number, body: object) => new Response(JSON.stringify(body), {
   status,
@@ -19,47 +18,16 @@ export const respond = (status: number, body: object) => new Response(JSON.strin
   },
 });
 
-const getDatabaseName = (env: Env) => {
-  if (!env.DATABASE_URI) throw new Error('DATABASE_URI is not configured');
-  const uri = new URL(env.DATABASE_URI.replace(/^mongodb\+srv:/, 'https:').replace(/^mongodb:/, 'https:'));
-  const databaseName = env.DATABASE_NAME || uri.pathname.slice(1).split('/')[0];
-  if (!databaseName) throw new Error('DATABASE_NAME is not configured');
-  return databaseName;
-};
+export const projectKey = (id: string) => `frontend-fun/projects/${id}.json`;
 
-// Reuse the connection promise within a warm Pages isolate. Failed connections
-// are cleared so a later request can recover from a transient outage.
-let clientPromise: Promise<MongoClient> | undefined;
-let cachedUri: string | undefined;
-
-export const getMongoClient = async (env: Env) => {
-  if (!env.DATABASE_URI) throw new Error('DATABASE_URI is not configured');
-  if (!clientPromise || cachedUri !== env.DATABASE_URI) {
-    cachedUri = env.DATABASE_URI;
-    const client = new MongoClient(env.DATABASE_URI, {
-      maxPoolSize: 5,
-      minPoolSize: 0,
-      maxIdleTimeMS: 30_000,
-      serverSelectionTimeoutMS: 5_000,
-      connectTimeoutMS: 5_000,
-      retryWrites: true,
-      appName: 'frontend-fun-pages',
-    } as unknown as ConstructorParameters<typeof MongoClient>[1]);
-    clientPromise = client.connect().catch((error) => {
-      clientPromise = undefined;
-      cachedUri = undefined;
-      throw error;
-    });
-  }
-  return clientPromise;
-};
-
-export const getFilesCollection = async (env: Env) =>
-  (await getMongoClient(env)).db(getDatabaseName(env)).collection<FilesDocument>('filesData');
-
-export const objectId = (value: string) => ObjectId.isValid(value) ? new ObjectId(value) : null;
+export const projectId = () => crypto.randomUUID().replaceAll('-', '');
+export const isProjectId = (id: string) => PROJECT_ID_PATTERN.test(id);
 
 export const parseFilesPayload = async (request: Request) => {
+  const contentLength = Number(request.headers.get('Content-Length'));
+  if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_SIZE) {
+    return { error: respond(413, { err: 'Project is larger than the 5 MiB remote save limit.' }) };
+  }
   let body: FilesPayload;
   try {
     body = await request.json() as FilesPayload;
@@ -67,5 +35,10 @@ export const parseFilesPayload = async (request: Request) => {
     return { error: respond(400, { err: 'Malformed JSON.' }) };
   }
   const filesData = validateFiles(body?.filesData);
-  return filesData ? { filesData } : { error: respond(400, { err: 'Invalid files data.' }) };
+  if (!filesData) return { error: respond(400, { err: 'Invalid files data.' }) };
+  const serialized = JSON.stringify({ filesData });
+  if (new TextEncoder().encode(serialized).byteLength > MAX_PROJECT_SIZE) {
+    return { error: respond(413, { err: 'Project is larger than the 5 MiB remote save limit.' }) };
+  }
+  return { filesData, serialized };
 };

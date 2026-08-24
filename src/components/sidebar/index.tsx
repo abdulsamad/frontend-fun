@@ -10,6 +10,8 @@ import AddLanguageLogo from '../../utils/AddLanguageLogo';
 import { getLanguageFromFilename, isValidFilename, validateFiles } from '../../context/validation';
 import { FilesPayload, FilesResponse } from '../../shared/filesContract';
 
+const PROJECT_ID_PATTERN = /^[a-f0-9]{32}$/i;
+
 const Sidebar: FC = () => {
 	const {
 		filesData,
@@ -63,16 +65,23 @@ const Sidebar: FC = () => {
 	const saveWork = async (ev: MouseEvent) => {
 		const elem = ev.currentTarget as HTMLButtonElement;
 		if (elem.disabled) return;
-		const id = localStorage.getItem('id');
+		let id = localStorage.getItem('id');
+		let version = localStorage.getItem('projectVersion');
+		if (id && !PROJECT_ID_PATTERN.test(id)) {
+			localStorage.removeItem('id');
+			localStorage.removeItem('projectVersion');
+			id = null;
+			version = null;
+		}
 		const headers = {
 			'Content-Type': 'application/json',
 			Accept: 'application/json',
 		};
-		const errorFn = () => {
+		const errorFn = (message = 'Sorry! unable to save your data') => {
 			elem.disabled = false;
 			elem.style.cursor = 'pointer';
 			toast.dismiss();
-			toast.error(`Sorry! unable to save your data`);
+			toast.error(message);
 		};
 
 		// Disable button
@@ -80,14 +89,35 @@ const Sidebar: FC = () => {
 		elem.style.cursor = 'progress';
 
 		try {
+			// R2 projects saved before version tracking have an ID but no local
+			// ETag. Read only their version so their first update stays safe.
+			if (id && !version) {
+				const existing = await fetch(`/api/getFilesData?id=${encodeURIComponent(id)}`);
+				const existingData = await existing.json() as FilesResponse;
+				if (!existing.ok || !existingData.version) {
+					localStorage.removeItem('id');
+					localStorage.removeItem('projectVersion');
+					id = null;
+				} else {
+					version = existingData.version;
+					localStorage.setItem('projectVersion', version);
+				}
+			}
+			const saveHeaders = id && version ? { ...headers, 'If-Match': version } : headers;
 			const response = await fetch(id ? `/api/saveFilesData?id=${encodeURIComponent(id)}` : '/api/saveFilesData', {
 				method: 'POST',
-				headers,
+				headers: saveHeaders,
 				body: JSON.stringify({ filesData } satisfies FilesPayload),
 			});
 			const data = await response.json() as FilesResponse;
-			if (!response.ok || !data.id) throw new Error(data.err || 'Server Error');
+			if (!response.ok || !data.id || !data.version) {
+				if (response.status === 409) errorFn('This project changed elsewhere. Import it before saving again.');
+				else if (response.status === 413) errorFn('This project is larger than the 5 MiB remote save limit.');
+				else errorFn(data.err || 'Sorry! unable to save your data');
+				return;
+			}
 			localStorage.setItem('id', data.id);
+			localStorage.setItem('projectVersion', data.version);
 			toast.dismiss();
 			toast.dark(<div>Successfully saved your data.<br />Use <UserId>{data.id}</UserId> to import it later.</div>);
 		} catch { errorFn(); }
@@ -106,9 +136,10 @@ const Sidebar: FC = () => {
 				const response = await fetch(`/api/getFilesData?id=${encodeURIComponent(id)}`);
 				const data = await response.json() as FilesResponse;
 				const imported = validateFiles(data.filesData);
-				if (!response.ok || !imported) throw new Error(data.err || 'Import failed');
+				if (!response.ok || !imported || !data.version) throw new Error(data.err || 'Import failed');
 				if (filesData.some((file) => file.value.length > 0) && !window.confirm('Importing will replace your current local work. Continue?')) return;
 				localStorage.setItem('id', id);
+				localStorage.setItem('projectVersion', data.version);
 				addImportedFilesData(imported);
 				toast.dark('Successfully imported your saved data');
 			} catch { toast.error('Sorry! unable to import your data'); }

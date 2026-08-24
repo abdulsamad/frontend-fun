@@ -1,9 +1,4 @@
 import { build } from 'esbuild';
-import { resolve } from 'node:path';
-
-const polyfills = resolve('node_modules/cf-mongodb-polyfills/src');
-const nodeRuntime = resolve('node_modules/unenv/dist/runtime/node');
-const mongoSocket = resolve('functions/mongodb-socket.ts');
 
 await build({
   entryPoints: ['functions/_worker.ts'],
@@ -15,46 +10,4 @@ await build({
   sourcemap: false,
   minify: true,
   define: { 'process.env.NODE_ENV': '"production"' },
-  alias: {
-    net: mongoSocket,
-    tls: mongoSocket,
-    dns: `${polyfills}/dns.ts`,
-    'node:net': `${nodeRuntime}/net.mjs`,
-    'node:tls': `${nodeRuntime}/tls.mjs`,
-    'node:dns': `${nodeRuntime}/dns.mjs`,
-    util: `${nodeRuntime}/util.mjs`,
-    zlib: `${nodeRuntime}/zlib.mjs`,
-    fs: `${nodeRuntime}/fs.mjs`,
-    'fs/promises': `${nodeRuntime}/fs/promises.mjs`,
-    timers: `${nodeRuntime}/timers.mjs`,
-    'timers/promises': `${nodeRuntime}/timers/promises.mjs`,
-    crypto: `${nodeRuntime}/crypto.mjs`,
-    'child_process': `${nodeRuntime}/child_process.mjs`,
-    stream: `${nodeRuntime}/stream.mjs`,
-    http: `${nodeRuntime}/http.mjs`,
-    url: `${nodeRuntime}/url.mjs`,
-    os: `${nodeRuntime}/os.mjs`,
-    process: `${nodeRuntime}/process.mjs`,
-    'node:util': `${nodeRuntime}/util.mjs`,
-    'node:util/types': `${nodeRuntime}/util/types.mjs`,
-    'node:zlib': `${nodeRuntime}/zlib.mjs`,
-    'node:fs': `${nodeRuntime}/fs.mjs`,
-    'node:fs/promises': `${nodeRuntime}/fs/promises.mjs`,
-    'node:timers': `${nodeRuntime}/timers.mjs`,
-    'node:timers/promises': `${nodeRuntime}/timers/promises.mjs`,
-    'node:crypto': `${nodeRuntime}/crypto.mjs`,
-    'node:child_process': `${nodeRuntime}/child_process.mjs`,
-    'node:stream': `${nodeRuntime}/stream.mjs`,
-    'node:stream/promises': `${nodeRuntime}/stream/promises.mjs`,
-    'node:http': `${nodeRuntime}/http.mjs`,
-    'node:url': `${nodeRuntime}/url.mjs`,
-    'node:path': `${nodeRuntime}/path.mjs`,
-    'node:os': `${nodeRuntime}/os.mjs`,
-    'node:process': `${nodeRuntime}/process.mjs`,
-    'node:events': `${nodeRuntime}/events.mjs`,
-    'node:querystring': `${nodeRuntime}/querystring.mjs`,
-    'node:tty': `${nodeRuntime}/tty.mjs`,
-    'node:async_hooks': `${nodeRuntime}/async_hooks.mjs`,
-  },
-  external: ['cloudflare:sockets'],
 });

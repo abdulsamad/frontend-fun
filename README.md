@@ -1,9 +1,11 @@
 ## Frontend Fun
+
 Online web-based code editor for HTML, CSS, and JavaScript with live reload can be used for practice, quick mockups, or CSS experiments
 
 [![Deploy to Cloudflare Pages](https://img.shields.io/badge/deploy-Cloudflare%20Pages-orange)](https://pages.cloudflare.com/)
 
 ### :sparkles: Features
+
 - Preview HTML, CSS, and JavaScript with live reload
 - Backup and Restore data with UID
 - Offline Support
@@ -17,18 +19,18 @@ Terminal shortcuts include `Ctrl+L`/`clear`, `Enter`, and backspace. Supported f
 
 ### API behavior
 
-`POST /api/saveFilesData` accepts `{ "filesData": File[] }`; add `?id=<ObjectId>` to update an existing project. `GET /api/getFilesData?id=<ObjectId>` imports one. Invalid methods, JSON, IDs, file names, languages, duplicate names, and oversized values receive a `4xx` response; missing saved projects return `404`.
+`POST /api/saveFilesData` accepts `{ "filesData": File[] }` and returns `{ id, version }`. To update, add `?id=<projectId>` and send that version as `If-Match`; stale updates return `409` rather than overwriting newer work. `GET /api/getFilesData?id=<projectId>` imports one and returns the latest version. Invalid methods, JSON, IDs, file names, languages, duplicate names, and oversized values receive a `4xx` response; missing saved projects return `404`.
 
-Known limits: projects are capped at 100 files and each file at 500 KB. Remote persistence requires `DATABASE_URI` and a reachable MongoDB instance. Pages Functions use the MongoDB driver over Cloudflare outbound TCP sockets and cache the connected client per warm isolate.
+Known limits: projects are capped at 100 files, each file at 500 KB, and 5 MiB per remote project. Remote projects are stored as JSON objects in the Cloudflare R2 bucket bound as `PROJECTS`; this app uses the `frontend-fun/projects/` prefix so the `experimental` bucket can safely serve other small projects too.
 
-### MongoDB Atlas keep-alive
+### R2 setup
 
-The repository includes a daily GitHub Actions workflow that calls `/api/keepAlive`, which performs a real MongoDB `ping`. Configure `DATABASE_URI`, optional `DATABASE_NAME`, and `KEEP_ALIVE_TOKEN` as encrypted Cloudflare Pages environment variables. Add matching `KEEP_ALIVE_URL` (for example, `https://your-site.pages.dev/api/keepAlive`) and `KEEP_ALIVE_TOKEN` repository secrets in GitHub. The workflow can also be run manually from the Actions tab.
-
-This keeps the free cluster from inactivity pausing; it does not bypass Atlas storage, throughput, billing, or account-level limits.
+In Cloudflare Pages, configure an R2 binding named `PROJECTS` for the private bucket. The bucket name is deliberately kept out of this public repository. Add a lifecycle rule that expires the `frontend-fun/projects/` prefix after 365 days. No database URI is needed. Existing MongoDB project IDs cannot be imported after migration; save them again if you need to keep them.
 
 ### Installation
+
 Clone the repository
+
 ```bash
 git clone https://github.com/abdulsamad/frontend-fun.git
 ```
@@ -45,19 +47,10 @@ If pnpm is not installed yet:
 corepack enable
 corepack prepare pnpm@11.22.0 --activate
 ```
-### Environment Variables
-Create a .env file in the project root and add the following variables
-```js
-DATABASE_URI = /* Your MongoDB URI */
-DATABASE_NAME = /* Optional if the URI already includes a database */
-KEEP_ALIVE_TOKEN = /* Secret used by the scheduled health check */
-```
 
 ### Development
 
-Use `pnpm dev` for the React app or `pnpm pages:dev` to build and run the Pages Functions locally. Deploy with `pnpm pages:deploy` after authenticating Wrangler. Create the Pages project once with `pnpm exec wrangler pages project create frontend-fun`, then set production secrets with `pnpm exec wrangler pages secret put DATABASE_URI`, `pnpm exec wrangler pages secret put DATABASE_NAME`, and `pnpm exec wrangler pages secret put KEEP_ALIVE_TOKEN`.
-
-For MongoDB Atlas, add `0.0.0.0/0` to Database &gt; Network Access, or use a private networking/egress solution. Cloudflare Workers TCP connections do not originate from a stable IP range that can be allowlisted. If using `0.0.0.0/0`, enforce a dedicated least-privilege database user, a strong password, and TLS.
+Use `pnpm dev` for the React app or `pnpm pages:dev` to build and run the Pages Functions locally. Deploy with `pnpm pages:deploy` after authenticating Wrangler. Create the Pages project once with `pnpm exec wrangler pages project create frontend-fun`.
 
 ### Screenshot
 
