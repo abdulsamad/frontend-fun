@@ -34,7 +34,7 @@ const commandOuputs = async (command: string, filesList: string[]) => {
     case commandsList[5]:
       return fetch('https://api.chucknorris.io/jokes/random')
         .then((res) => { if (!res.ok) throw new Error('request failed'); return res.json(); })
-        .then(({ value }) => value)
+        .then((body) => (body as { value: string }).value)
         .catch(() => 'Joke service is unavailable right now.');
 
     case commandsList[6]:

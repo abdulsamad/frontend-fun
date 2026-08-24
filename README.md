@@ -50,7 +50,7 @@ corepack prepare pnpm@11.22.0 --activate
 
 ### Development
 
-Use `pnpm dev` for the React app or `pnpm pages:dev` to build and run the Pages Functions locally. Deploy with `pnpm pages:deploy` after authenticating Wrangler. Create the Pages project once with `pnpm exec wrangler pages project create frontend-fun`.
+Use `pnpm dev` for the Vite development server or `pnpm pages:dev` to build and run the Pages Functions locally. Deploy with `pnpm pages:deploy` after authenticating Wrangler. Create the Pages project once with `pnpm exec wrangler pages project create frontend-fun`.
 
 ### Screenshot
 

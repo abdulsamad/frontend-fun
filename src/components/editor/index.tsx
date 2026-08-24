@@ -54,7 +54,7 @@ const Index: FC = () => {
 							tabIndex={0}
 							aria-label={`Close ${file.name}`}
 							title={openFiles.length <= 1 ? 'Keep one file open' : `Close ${file.name}`}
-							onClick={(event) => handleCloseFile(event, file.name)}>
+							onClick={(event: MouseEvent<HTMLButtonElement>) => handleCloseFile(event, file.name)}>
 							×
 						</CloseButton>
 					</NavItem>

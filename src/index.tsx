@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import App from './App';
 
 import 'reseter.css';
-import 'xterm/css/xterm.css';
+import '@xterm/xterm/css/xterm.css';
 import 'react-toastify/dist/ReactToastify.css';
 
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';

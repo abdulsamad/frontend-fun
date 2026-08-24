@@ -4,67 +4,48 @@
 	"private": true,
 	"packageManager": "pnpm@11.22.0",
 	"dependencies": {
-		"@monaco-editor/react": "^4.4.6",
-		"allotment": "^1.18.1",
-		"beautiful-react-hooks": "^3.7.0",
-		"emmet-monaco-es": "^5.2.1",
+		"@monaco-editor/react": "^4.7.0",
+		"@xterm/addon-fit": "^0.11.0",
+		"@xterm/xterm": "^6.0.0",
+		"allotment": "^1.20.5",
+		"beautiful-react-hooks": "^5.0.3",
+		"emmet-monaco-es": "^5.7.0",
 		"localforage": "^1.10.0",
 		"monaco-editor": "^0.56.0",
-		"react": "^18.2.0",
-		"react-dom": "^18.2.0",
-		"react-scripts": "^5.0.1",
+		"react": "^19.2.8",
+		"react-dom": "^19.2.8",
 		"react-split": "^2.0.14",
-		"react-toastify": "^9.1.1",
-		"reseter.css": "1.1.3",
+		"react-toastify": "^11.1.0",
+		"reseter.css": "2.0.0",
 		"split.js": "^1.6.5",
-		"styled-components": "^5.3.0",
+		"styled-components": "^6.5.3",
 		"workbox-core": "^7.4.1",
 		"workbox-expiration": "^7.4.1",
 		"workbox-precaching": "^7.4.1",
 		"workbox-routing": "^7.4.1",
-		"workbox-strategies": "^7.4.1",
-		"xterm": "^4.19.0",
-		"xterm-addon-fit": "^0.5.0",
-		"xterm-for-react": "^1.0.4"
+		"workbox-strategies": "^7.4.1"
 	},
 	"devDependencies": {
 		"@cloudflare/unenv-preset": "^2.16.1",
 		"@cloudflare/workers-types": "^5.20260823.1",
-		"@types/node": "^18.15.0",
-		"@types/react": "^18.0.28",
-		"@types/react-dom": "^18.0.11",
-		"@types/styled-components": "^5.1.10",
-		"esbuild": "^0.25.9",
-		"eslint-config-react-app": "7.0.1",
-		"typescript": "^4.9.5",
+		"@types/node": "^26.2.0",
+		"@types/react": "^19.2.18",
+		"@types/react-dom": "^19.2.5",
+		"@types/styled-components": "^5.1.36",
+		"@vitejs/plugin-react": "^6.1.0",
+		"esbuild": "^0.28.2",
+		"typescript": "^7.0.2",
 		"unenv": "2.0.0-rc.24",
+		"vite": "^8.2.2",
+		"vite-plugin-pwa": "^1.3.0",
 		"wrangler": "^4.125.0"
 	},
 	"scripts": {
-		"dev": "react-scripts start",
+		"dev": "vite",
 		"pages:dev": "pnpm build && wrangler pages dev build --r2=PROJECTS",
 		"pages:deploy": "pnpm build && wrangler pages deploy build --project-name frontend-fun",
-		"start": "react-scripts start",
-		"build": "react-scripts build && node scripts/build-pages.mjs",
-		"test": "react-scripts test",
-		"eject": "react-scripts eject"
-	},
-	"eslintConfig": {
-		"extends": [
-			"react-app",
-			"react-app/jest"
-		]
-	},
-	"browserslist": {
-		"production": [
-			">0.2%",
-			"not dead",
-			"not op_mini all"
-		],
-		"development": [
-			"last 1 chrome version",
-			"last 1 firefox version",
-			"last 1 safari version"
-		]
+		"start": "vite",
+		"build": "vite build && node scripts/build-pages.mjs",
+		"preview": "vite preview"
 	}
 }
