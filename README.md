@@ -1,7 +1,7 @@
 ## Frontend Fun
 Online web-based code editor for HTML, CSS, and JavaScript with live reload can be used for practice, quick mockups, or CSS experiments
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/9d80dacc-64b1-4d3a-b72a-a29816e953a6/deploy-status)](https://app.netlify.com/sites/frontend-fun/deploys)
+[![Deploy to Cloudflare Pages](https://img.shields.io/badge/deploy-Cloudflare%20Pages-orange)](https://pages.cloudflare.com/)
 
 ### :sparkles: Features
 - Preview HTML, CSS, and JavaScript with live reload
@@ -19,11 +19,11 @@ Terminal shortcuts include `Ctrl+L`/`clear`, `Enter`, and backspace. Supported f
 
 `POST /api/saveFilesData` accepts `{ "filesData": File[] }`; add `?id=<ObjectId>` to update an existing project. `GET /api/getFilesData?id=<ObjectId>` imports one. Invalid methods, JSON, IDs, file names, languages, duplicate names, and oversized values receive a `4xx` response; missing saved projects return `404`.
 
-Known limits: projects are capped at 100 files and each file at 500 KB. Remote persistence requires `DATABASE_URI` and a reachable MongoDB instance.
+Known limits: projects are capped at 100 files and each file at 500 KB. Remote persistence requires `DATABASE_URI` and a reachable MongoDB instance. Pages Functions use the MongoDB driver over Cloudflare outbound TCP sockets and cache the connected client per warm isolate.
 
 ### MongoDB Atlas keep-alive
 
-The repository includes a daily GitHub Actions workflow that calls `/api/keepAlive`, which performs a real MongoDB `ping`. This prevents an M0/Free Atlas cluster from being considered connection-idle. Configure `KEEP_ALIVE_TOKEN` in Netlify, then add matching `KEEP_ALIVE_URL` (for example, `https://your-site.netlify.app/api/keepAlive`) and `KEEP_ALIVE_TOKEN` repository secrets in GitHub. The workflow can also be run manually from the Actions tab.
+The repository includes a daily GitHub Actions workflow that calls `/api/keepAlive`, which performs a real MongoDB `ping`. Configure `DATABASE_URI`, optional `DATABASE_NAME`, and `KEEP_ALIVE_TOKEN` as encrypted Cloudflare Pages environment variables. Add matching `KEEP_ALIVE_URL` (for example, `https://your-site.pages.dev/api/keepAlive`) and `KEEP_ALIVE_TOKEN` repository secrets in GitHub. The workflow can also be run manually from the Actions tab.
 
 This keeps the free cluster from inactivity pausing; it does not bypass Atlas storage, throughput, billing, or account-level limits.
 
@@ -33,44 +33,29 @@ Clone the repository
 git clone https://github.com/abdulsamad/frontend-fun.git
 ```
 
-Install dependencies
+Install dependencies with pnpm
 
 ```bash
-yarn
-```
-or
-```bash
-npm install
-```
-Netlify CLI is also required to run serverless functions
-```bash
-yarn global add netlify-cli
-```
-or
-```bash
-npm install -g netlify-cli
+pnpm install
 ```
 
+If pnpm is not installed yet:
+
+```bash
+corepack enable
+corepack prepare pnpm@11.22.0 --activate
+```
 ### Environment Variables
 Create a .env file in the project root and add the following variables
 ```js
 DATABASE_URI = /* Your MongoDB URI */
+DATABASE_NAME = /* Optional if the URI already includes a database */
+KEEP_ALIVE_TOKEN = /* Secret used by the scheduled health check */
 ```
-
 
 ### Development
 
-If you don't have Netlify account, [Create Netlify account](https://app.netlify.com/) (You can also login with GitHub, Gitlab &amp; Bitbucket)
-
-Login into Netlify CLI with command `netlify login` and grant access to Netlify CLI
-
-Run **`netlify link`** command in project directory and link your project to Netlify
-
-Run **`netlify dev`** command to start local server
-
-For more information visit [Netlify CLI docs](https://docs.netlify.com/cli/get-started/)
-
-> 💡 **Note:** Netlify free plan limits the serverless functions to timeout at 10 seconds. It is possible that sometimes saving data won't work on deployment with Netlify free plan.
+Use `pnpm dev` for the React app or `pnpm pages:dev` to build and run the Pages Functions locally. Deploy with `pnpm pages:deploy` after authenticating Wrangler. Create the Pages project once with `pnpm exec wrangler pages project create frontend-fun`, then set production secrets with `pnpm exec wrangler pages secret put DATABASE_URI`, `pnpm exec wrangler pages secret put DATABASE_NAME`, and `pnpm exec wrangler pages secret put KEEP_ALIVE_TOKEN`.
 
 ### Screenshot
 
