@@ -3,6 +3,7 @@ import { resolve } from 'node:path';
 
 const polyfills = resolve('node_modules/cf-mongodb-polyfills/src');
 const nodeRuntime = resolve('node_modules/unenv/dist/runtime/node');
+const mongoSocket = resolve('functions/mongodb-socket.ts');
 
 await build({
   entryPoints: ['functions/_worker.ts'],
@@ -15,8 +16,8 @@ await build({
   minify: true,
   define: { 'process.env.NODE_ENV': '"production"' },
   alias: {
-    net: `${polyfills}/net.ts`,
-    tls: `${polyfills}/tls.ts`,
+    net: mongoSocket,
+    tls: mongoSocket,
     dns: `${polyfills}/dns.ts`,
     'node:net': `${nodeRuntime}/net.mjs`,
     'node:tls': `${nodeRuntime}/tls.mjs`,

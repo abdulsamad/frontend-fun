@@ -57,6 +57,8 @@ KEEP_ALIVE_TOKEN = /* Secret used by the scheduled health check */
 
 Use `pnpm dev` for the React app or `pnpm pages:dev` to build and run the Pages Functions locally. Deploy with `pnpm pages:deploy` after authenticating Wrangler. Create the Pages project once with `pnpm exec wrangler pages project create frontend-fun`, then set production secrets with `pnpm exec wrangler pages secret put DATABASE_URI`, `pnpm exec wrangler pages secret put DATABASE_NAME`, and `pnpm exec wrangler pages secret put KEEP_ALIVE_TOKEN`.
 
+For MongoDB Atlas, add `0.0.0.0/0` to Database &gt; Network Access, or use a private networking/egress solution. Cloudflare Workers TCP connections do not originate from a stable IP range that can be allowlisted. If using `0.0.0.0/0`, enforce a dedicated least-privilege database user, a strong password, and TLS.
+
 ### Screenshot
 
 ![Frontend fun screenshot](/readme/screenshot.png "Frontend fun screenshot")
