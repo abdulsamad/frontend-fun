@@ -26,10 +26,7 @@ const AddLanguageLogo: FC<Props> = ({ fileName }) => {
   };
 
   return (
-    <>
-      <img height={16} width={16} src={languageLogoSwitch(fileName)} alt="Language" />
-      <span style={{ marginLeft: 5 }}>{fileName}</span>
-    </>
+    <img height={16} width={16} src={languageLogoSwitch(fileName)} alt='' aria-hidden='true' />
   );
 };
 

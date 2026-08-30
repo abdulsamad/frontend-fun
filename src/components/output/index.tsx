@@ -1,59 +1,142 @@
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useAtomValue } from 'jotai';
 
-import { useAppContext } from '../../context';
+import { projectFilesAtom } from '../../state/projectAtoms';
+import {
+  createPreviewBundle,
+  createPreviewShell,
+  PreviewBundle,
+  PreviewError,
+  PreviewFrameMessage,
+  PreviewHostMessage,
+  PreviewStatus as PreviewStatusValue,
+} from '../../utils/createPreviewBundle';
+import Icon from '../Icon';
+import PreviewPane from './Output';
+import { PreviewErrorBanner, PreviewFrame } from './Iframe';
+import { PreviewActions, PreviewAddressBar, PreviewLabel, PreviewStatus, PreviewToolbar, ReloadButton } from './Nav';
 
-import OutputContainer from './Output';
-import { Nav, Addressbar, Address } from './Nav';
-import Iframe from './Iframe';
-import ConvertArrToString from '../../utils/convertArrtoString';
+const UPDATE_DELAY = 200;
 
-const Output: FC = () => {
-	const { filesData } = useAppContext();
-	const [previewError, setPreviewError] = useState('');
-	const previewId = useRef(`preview-${Math.random().toString(36).slice(2)}`).current;
-	const { allFilesHTMLCombined, allFilesCSSCombined, allFilesJSCombined } = useMemo(() => ConvertArrToString(filesData), [filesData]);
-	const srcDoc = `
-  <html>
-    <head>
-      <style>${allFilesCSSCombined}</style>
-    </head>
-    <body>
-      ${allFilesHTMLCombined}
-      <script>
-        window.addEventListener('error', function (event) {
-          parent.postMessage({ type: 'preview-error', id: '${previewId}', message: event.message || 'Preview runtime error' }, '*');
-        });
-        try { ${allFilesJSCombined} } catch (error) { parent.postMessage({ type: 'preview-error', id: '${previewId}', message: error.message }, '*'); }
-      </script>
-    </body>
-  </html>`;
-
-	useEffect(() => {
-		setPreviewError('');
-	}, [srcDoc]);
-
-	useEffect(() => {
-		const onMessage = (event: MessageEvent) => {
-			if (event.data?.type === 'preview-error' && event.data.id === previewId) setPreviewError(String(event.data.message));
-		};
-		window.addEventListener('message', onMessage);
-		return () => window.removeEventListener('message', onMessage);
-	}, [previewId]);
-
-	return (
-		<OutputContainer id='output'>
-			<Nav>
-				<Addressbar>
-					<svg width='16' height='16' viewBox='0 0 24 24' fill='#54BB52'>
-						<path d='M18 10v-4c0-3.313-2.687-6-6-6s-6 2.687-6 6v4h-3v14h18v-14h-3zm-5 7.723v2.277h-2v-2.277c-.595-.347-1-.984-1-1.723 0-1.104.896-2 2-2s2 .896 2 2c0 .738-.404 1.376-1 1.723zm-5-7.723v-4c0-2.206 1.794-4 4-4 2.205 0 4 1.794 4 4v4h-8z' />
-					</svg>
-					<Address>127.0.0.1</Address>
-				</Addressbar>
-			</Nav>
-			{previewError && <div role='alert' style={{ padding: 12, color: '#b00020', background: '#fff' }}>Preview error: {previewError}</div>}
-			<Iframe name='output-iframe' srcDoc={srcDoc} title='code output' sandbox='allow-scripts' />
-		</OutputContainer>
-	);
+const useDebouncedBundle = (bundle: PreviewBundle) => {
+  const [debounced, setDebounced] = useState(bundle);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebounced(bundle), UPDATE_DELAY);
+    return () => window.clearTimeout(timeout);
+  }, [bundle]);
+  return debounced;
 };
 
-export default Output;
+const Preview = () => {
+  const filesData = useAtomValue(projectFilesAtom);
+  const bundle = useMemo(() => createPreviewBundle(filesData), [filesData]);
+  const debouncedBundle = useDebouncedBundle(bundle);
+  const [status, setStatus] = useState<PreviewStatusValue>('updating');
+  const [previewError, setPreviewError] = useState<PreviewError | null>(null);
+  const [messageListenerReady, setMessageListenerReady] = useState(false);
+  const [documentRevision, setDocumentRevision] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const channelId = useRef(`preview-${crypto.randomUUID()}`).current;
+  const hasPreviewError = useRef(false);
+  const renderId = useRef(0);
+  const currentBundle = useRef(debouncedBundle);
+  const previousBundle = useRef(debouncedBundle);
+  const shell = useMemo(() => createPreviewShell(channelId), [channelId]);
+
+  const postToFrame = (message: PreviewHostMessage) => {
+    iframeRef.current?.contentWindow?.postMessage(message, '*');
+  };
+
+  const renderCurrentFrame = () => {
+    const frameWindow = iframeRef.current?.contentWindow;
+    if (!frameWindow) return;
+    frameWindow.postMessage({ type: 'preview:render', channelId, renderId: renderId.current, bundle: currentBundle.current } satisfies PreviewHostMessage, '*');
+  };
+
+  useEffect(() => {
+    currentBundle.current = debouncedBundle;
+    const previous = previousBundle.current;
+    if (previous === debouncedBundle) return;
+    previousBundle.current = debouncedBundle;
+    const documentChanged = previous.markup !== debouncedBundle.markup || previous.scripts !== debouncedBundle.scripts;
+    const stylesChanged = previous.styles !== debouncedBundle.styles;
+    if (!documentChanged && !stylesChanged) return;
+
+    hasPreviewError.current = false;
+    setPreviewError(null);
+    setStatus('updating');
+
+    if (documentChanged) {
+      renderId.current += 1;
+      setDocumentRevision((revision) => revision + 1);
+      return;
+    }
+    if (stylesChanged) {
+      postToFrame({ type: 'preview:update-styles', channelId, styles: debouncedBundle.styles });
+    }
+  }, [channelId, debouncedBundle]);
+
+  useLayoutEffect(() => {
+    const handleMessage = (event: MessageEvent<PreviewFrameMessage>) => {
+      if (event.source !== iframeRef.current?.contentWindow || event.data?.channelId !== channelId) return;
+      if (event.data.type === 'preview:ready') {
+        renderCurrentFrame();
+      } else if (event.data.type === 'preview:rendered') {
+        if (!hasPreviewError.current) setStatus('ready');
+      } else if (event.data.type === 'preview:error') {
+        hasPreviewError.current = true;
+        setPreviewError({ message: event.data.message, line: event.data.line, column: event.data.column });
+        setStatus('error');
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    setMessageListenerReady(true);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [channelId]);
+
+  const reloadPreview = () => {
+    hasPreviewError.current = false;
+    renderId.current += 1;
+    setPreviewError(null);
+    setStatus('updating');
+    setDocumentRevision((revision) => revision + 1);
+  };
+
+  const location = previewError?.line
+    ? ` at ${previewError.line}${previewError.column ? `:${previewError.column}` : ''}`
+    : '';
+
+  return (
+    <PreviewPane id='output' aria-label='Live preview'>
+      <PreviewToolbar>
+        <PreviewLabel>Preview</PreviewLabel>
+        <PreviewAddressBar><span>localhost / preview</span></PreviewAddressBar>
+        <PreviewActions>
+          <PreviewStatus $status={status} aria-label={`Preview ${status}`}><span>{status}</span></PreviewStatus>
+          <ReloadButton type='button' aria-label='Reload preview' title='Reload preview' onClick={reloadPreview}>
+            <Icon name='refresh' />
+          </ReloadButton>
+        </PreviewActions>
+      </PreviewToolbar>
+      {previewError && (
+        <PreviewErrorBanner role='alert'>
+          <strong>Preview error</strong>
+          <span>{previewError.message}{location}</span>
+        </PreviewErrorBanner>
+      )}
+      {messageListenerReady && (
+        <PreviewFrame
+          key={documentRevision}
+          ref={iframeRef}
+          name='frontend-fun-preview'
+          srcDoc={shell}
+          title='Live project preview'
+          sandbox='allow-scripts'
+          onLoad={renderCurrentFrame}
+        />
+      )}
+    </PreviewPane>
+  );
+};
+
+export default Preview;

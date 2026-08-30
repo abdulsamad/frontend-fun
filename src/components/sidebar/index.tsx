@@ -1,214 +1,248 @@
-import { FC, MouseEvent } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
+import { useAtomValue, useSetAtom, useStore } from 'jotai';
 import { toast } from 'react-toastify';
 
-import { useAppContext } from '../../context';
-
-import SidebarSection from './Sidebar';
-import { Panel, PanelItem, UserId } from './Panel';
-import { Files, FileItem, TopBar, TopBarButton, DeleteButton } from './Files';
-import AddLanguageLogo from '../../utils/AddLanguageLogo';
-import { getLanguageFromFilename, isValidFilename, validateFiles } from '../../context/validation';
+import {
+  activeFileNameAtom,
+  addProjectFileAtom,
+  projectFileNamesAtom,
+  projectFileSummariesAtom,
+  projectFilesAtom,
+  removeProjectFileAtom,
+  replaceProjectFilesAtom,
+  selectProjectFileAtom,
+} from '../../state/projectAtoms';
+import { getLanguageFromFilename, isValidFilename, validateFiles } from '../../state/validation';
 import { FilesPayload, FilesResponse } from '../../shared/filesContract';
+import AddLanguageLogo from '../../utils/AddLanguageLogo';
+import Icon from '../Icon';
+import SidebarShell, { ExplorerPane } from './Sidebar';
+import { ActivityBar, ActivityButton, UserId } from './Panel';
+import {
+  ActionGroup,
+  DeleteButton,
+  DialogActions,
+  DialogButton,
+  DialogError,
+  ExplorerHeader,
+  FileButton,
+  FileList,
+  FileRow,
+  ProjectHeader,
+  ToolbarButton,
+  WorkbenchDialog,
+} from './Files';
 
 const PROJECT_ID_PATTERN = /^[a-f0-9]{32}$/i;
 
-const Sidebar: FC = () => {
-	const {
-		filesData,
-		filesList,
-		activeFile,
-		changeActiveFile,
-		addFile,
-		addImportedFilesData,
-		removeFile,
-	} = useAppContext();
+type DialogState =
+  | { type: 'new-file' }
+  | { type: 'open-project' }
+  | { type: 'delete-file'; filename: string }
+  | null;
 
-	const addNewFile = () => {
-		const filename = window.prompt('Please enter file name')?.trim();
+const Sidebar = () => {
+  const files = useAtomValue(projectFileSummariesAtom);
+  const fileNames = useAtomValue(projectFileNamesAtom);
+  const activeFileName = useAtomValue(activeFileNameAtom);
+  const addFile = useSetAtom(addProjectFileAtom);
+  const removeFile = useSetAtom(removeProjectFileAtom);
+  const replaceFiles = useSetAtom(replaceProjectFilesAtom);
+  const selectFile = useSetAtom(selectProjectFileAtom);
+  const store = useStore();
+  const [dialogState, setDialogState] = useState<DialogState>(null);
+  const [dialogValue, setDialogValue] = useState('');
+  const [dialogError, setDialogError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isOpening, setIsOpening] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
-		if (filename && isValidFilename(filename)) {
-			const isFilePresent = filesList.some(
-				(name) => name.toLowerCase() === filename.toLowerCase(),
-			);
-			const extension = getLanguageFromFilename(filename);
+  useEffect(() => {
+    if (dialogState && !dialogRef.current?.open) dialogRef.current?.showModal();
+  }, [dialogState]);
 
-			if (isFilePresent) {
-				toast.error('File name cannot be same');
-				return;
-			}
+  const openDialog = (nextDialog: DialogState) => {
+    setDialogValue('');
+    setDialogError('');
+    setDialogState(nextDialog);
+  };
 
-			addFile({
-				name: filename,
-				language: extension,
-				value: '',
-			});
-		} else if (filename) {
-			toast.error('File format not supported! Only .html, .css, .js 😔');
-		}
-	};
+  const closeDialog = () => {
+    dialogRef.current?.close();
+    setDialogState(null);
+    setDialogValue('');
+    setDialogError('');
+  };
 
-	const deleteFile = (ev: MouseEvent, filename: string) => {
-		ev.stopPropagation();
-		const doDelete = window.confirm(
-			'Are you sure you want to delete this file?',
-		);
+  const createFile = (event: FormEvent) => {
+    event.preventDefault();
+    const filename = dialogValue.trim();
+    if (!isValidFilename(filename)) {
+      setDialogError('Use a valid .html, .css, or .js filename.');
+      return;
+    }
+    if (fileNames.some((name) => name.toLowerCase() === filename.toLowerCase())) {
+      setDialogError('A file with this name already exists.');
+      return;
+    }
+    addFile({ name: filename, language: getLanguageFromFilename(filename), value: '' });
+    closeDialog();
+  };
 
-		if (doDelete) {
-			if (filesData.length === 1) {
-				toast.error('Keep at least one file in the project.');
-				return;
-			}
-			removeFile(filename);
-		}
-	};
+  const deleteFile = (event: FormEvent) => {
+    event.preventDefault();
+    if (dialogState?.type !== 'delete-file') return;
+    if (files.length === 1) {
+      setDialogError('Keep at least one file in the project.');
+      return;
+    }
+    removeFile(dialogState.filename);
+    closeDialog();
+  };
 
-	const saveWork = async (ev: MouseEvent) => {
-		const elem = ev.currentTarget as HTMLButtonElement;
-		if (elem.disabled) return;
-		let id = localStorage.getItem('id');
-		let version = localStorage.getItem('projectVersion');
-		if (id && !PROJECT_ID_PATTERN.test(id)) {
-			localStorage.removeItem('id');
-			localStorage.removeItem('projectVersion');
-			id = null;
-			version = null;
-		}
-		const headers = {
-			'Content-Type': 'application/json',
-			Accept: 'application/json',
-		};
-		const errorFn = (message = 'Sorry! unable to save your data') => {
-			elem.disabled = false;
-			elem.style.cursor = 'pointer';
-			toast.dismiss();
-			toast.error(message);
-		};
+  const saveProject = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+    let id = localStorage.getItem('id');
+    let version = localStorage.getItem('projectVersion');
+    if (id && !PROJECT_ID_PATTERN.test(id)) {
+      localStorage.removeItem('id');
+      localStorage.removeItem('projectVersion');
+      id = null;
+      version = null;
+    }
+    const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
+    const filesData = store.get(projectFilesAtom);
 
-		// Disable button
-		elem.disabled = true;
-		elem.style.cursor = 'progress';
+    try {
+      if (id && !version) {
+        const existing = await fetch(`/api/getFilesData?id=${encodeURIComponent(id)}`);
+        const existingData = await existing.json() as FilesResponse;
+        if (!existing.ok || !existingData.version) {
+          localStorage.removeItem('id');
+          localStorage.removeItem('projectVersion');
+          id = null;
+        } else {
+          version = existingData.version;
+          localStorage.setItem('projectVersion', version);
+        }
+      }
+      const saveHeaders = id && version ? { ...headers, 'If-Match': version } : headers;
+      const response = await fetch(id ? `/api/saveFilesData?id=${encodeURIComponent(id)}` : '/api/saveFilesData', {
+        method: 'POST',
+        headers: saveHeaders,
+        body: JSON.stringify({ filesData } satisfies FilesPayload),
+      });
+      const data = await response.json() as FilesResponse;
+      if (!response.ok || !data.id || !data.version) {
+        if (response.status === 409) throw new Error('This project changed elsewhere. Open it again before saving.');
+        if (response.status === 413) throw new Error('This project is larger than the 5 MiB remote save limit.');
+        throw new Error(data.err || 'The project could not be saved.');
+      }
+      localStorage.setItem('id', data.id);
+      localStorage.setItem('projectVersion', data.version);
+      toast.success(<div>Project saved.<br /><UserId>{data.id}</UserId></div>);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'The project could not be saved.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-		try {
-			// R2 projects saved before version tracking have an ID but no local
-			// ETag. Read only their version so their first update stays safe.
-			if (id && !version) {
-				const existing = await fetch(`/api/getFilesData?id=${encodeURIComponent(id)}`);
-				const existingData = await existing.json() as FilesResponse;
-				if (!existing.ok || !existingData.version) {
-					localStorage.removeItem('id');
-					localStorage.removeItem('projectVersion');
-					id = null;
-				} else {
-					version = existingData.version;
-					localStorage.setItem('projectVersion', version);
-				}
-			}
-			const saveHeaders = id && version ? { ...headers, 'If-Match': version } : headers;
-			const response = await fetch(id ? `/api/saveFilesData?id=${encodeURIComponent(id)}` : '/api/saveFilesData', {
-				method: 'POST',
-				headers: saveHeaders,
-				body: JSON.stringify({ filesData } satisfies FilesPayload),
-			});
-			const data = await response.json() as FilesResponse;
-			if (!response.ok || !data.id || !data.version) {
-				if (response.status === 409) errorFn('This project changed elsewhere. Import it before saving again.');
-				else if (response.status === 413) errorFn('This project is larger than the 5 MiB remote save limit.');
-				else errorFn(data.err || 'Sorry! unable to save your data');
-				return;
-			}
-			localStorage.setItem('id', data.id);
-			localStorage.setItem('projectVersion', data.version);
-			toast.dismiss();
-			toast.dark(<div>Successfully saved your data.<br />Use <UserId>{data.id}</UserId> to import it later.</div>);
-		} catch { errorFn(); }
-		elem.disabled = false;
-		elem.style.cursor = 'pointer';
-	};
+  const openProject = async (event: FormEvent) => {
+    event.preventDefault();
+    const id = dialogValue.trim();
+    if (!PROJECT_ID_PATTERN.test(id)) {
+      setDialogError('Enter a valid 32-character Project ID.');
+      return;
+    }
+    setIsOpening(true);
+    setDialogError('');
+    try {
+      const response = await fetch(`/api/getFilesData?id=${encodeURIComponent(id)}`);
+      const data = await response.json() as FilesResponse;
+      const imported = validateFiles(data.filesData);
+      if (!response.ok || !imported || !data.version) throw new Error(data.err || 'Project not found.');
+      localStorage.setItem('id', id);
+      localStorage.setItem('projectVersion', data.version);
+      replaceFiles(imported);
+      closeDialog();
+      toast.success('Project opened.');
+    } catch (error) {
+      setDialogError(error instanceof Error ? error.message : 'The project could not be opened.');
+    } finally {
+      setIsOpening(false);
+    }
+  };
 
-	const getSavedWork = async (ev: MouseEvent) => {
-		const elem = ev.currentTarget as HTMLButtonElement;
-		if (elem.disabled) return;
-		const id = window.prompt('Please enter your saved data ID');
+  return (
+    <SidebarShell id='sidebar' aria-label='Explorer'>
+      <ActivityBar aria-label='Activity bar'>
+        <ActivityButton type='button' $active aria-current='page' title='Explorer'>
+          <Icon name='explorer' size={24} />
+          <span className='visually-hidden'>Explorer</span>
+        </ActivityButton>
+      </ActivityBar>
+      <ExplorerPane>
+        <ExplorerHeader>
+          <h2>Explorer</h2>
+          <ActionGroup>
+            <ToolbarButton type='button' aria-label='New file' title='New file' onClick={() => openDialog({ type: 'new-file' })}>
+              <Icon name='file-add' />
+            </ToolbarButton>
+            <ToolbarButton type='button' aria-label='Save project' title='Save project' disabled={isSaving} aria-busy={isSaving} onClick={saveProject}>
+              <Icon name='save' />
+            </ToolbarButton>
+            <ToolbarButton type='button' aria-label='Open saved project' title='Open saved project' onClick={() => openDialog({ type: 'open-project' })}>
+              <Icon name='open' />
+            </ToolbarButton>
+          </ActionGroup>
+        </ExplorerHeader>
+        <ProjectHeader><Icon name='chevron-down' size={14} /> Frontend Fun</ProjectHeader>
+        <FileList aria-label='Project files'>
+          {files.map((file) => (
+            <FileRow $active={file.name === activeFileName} key={file.name}>
+              <FileButton type='button' aria-current={file.name === activeFileName ? 'page' : undefined} onClick={() => selectFile(file.name)}>
+                <AddLanguageLogo fileName={file.name} />
+                <span>{file.name}</span>
+              </FileButton>
+              <DeleteButton type='button' aria-label={`Delete ${file.name}`} title={`Delete ${file.name}`} onClick={() => openDialog({ type: 'delete-file', filename: file.name })}>
+                <Icon name='delete' size={14} />
+              </DeleteButton>
+            </FileRow>
+          ))}
+        </FileList>
+      </ExplorerPane>
 
-		if (id) {
-			elem.disabled = true;
-			try {
-				const response = await fetch(`/api/getFilesData?id=${encodeURIComponent(id)}`);
-				const data = await response.json() as FilesResponse;
-				const imported = validateFiles(data.filesData);
-				if (!response.ok || !imported || !data.version) throw new Error(data.err || 'Import failed');
-				if (filesData.some((file) => file.value.length > 0) && !window.confirm('Importing will replace your current local work. Continue?')) return;
-				localStorage.setItem('id', id);
-				localStorage.setItem('projectVersion', data.version);
-				addImportedFilesData(imported);
-				toast.dark('Successfully imported your saved data');
-			} catch { toast.error('Sorry! unable to import your data'); }
-			elem.disabled = false;
-		}
-	};
-
-	return (
-		<SidebarSection id='sidebar'>
-			<Panel>
-				<PanelItem title='Explorer' active={true}>
-					<svg
-						width='24'
-						height='24'
-						viewBox='0 0 24 24'
-						style={{ pointerEvents: 'none' }}>
-						<path d='M13 6c3.469 0 2 5 2 5s5-1.594 5 2v9h-12v-16h5zm.827-2h-7.827v20h16v-11.842c0-2.392-5.011-8.158-8.173-8.158zm.173-2l-3-2h-9v22h2v-20h10z' />
-					</svg>
-				</PanelItem>
-				<PanelItem title='Save data remotely' onClick={saveWork}>
-					<svg
-						width='24'
-						height='24'
-						viewBox='0 0 24 24'
-						style={{ pointerEvents: 'none' }}>
-						<path d='M13 3h2.996v5h-2.996v-5zm11 1v20h-24v-24h20l4 4zm-17 5h10v-7h-10v7zm15-4.171l-2.828-2.829h-.172v9h-14v-9h-3v20h20v-17.171z' />
-					</svg>
-				</PanelItem>
-				<PanelItem title='Import remotely saved data' onClick={getSavedWork}>
-					<svg
-						width='24'
-						height='24'
-						fillRule='evenodd'
-						clipRule='evenodd'
-						style={{ pointerEvents: 'none' }}>
-						<path d='M8 11h-6v10h20v-10h-6v-2h8v14h-24v-14h8v2zm5 2h4l-5 6-5-6h4v-12h2v12z' />
-					</svg>
-				</PanelItem>
-			</Panel>
-			<Files>
-				<TopBar>
-					Files
-					<TopBarButton title='Add new file' onClick={addNewFile}>
-						<svg width='16' height='16' viewBox='0 0 24 24'>
-							<path d='M23 17h-3v-3h-2v3h-3v2h3v3h2v-3h3v-2zm-7 5v2h-15v-24h10.189c3.163 0 9.811 7.223 9.811 9.614v2.386h-2v-1.543c0-4.107-6-2.457-6-2.457s1.518-6-2.638-6h-7.362v20h13z' />
-						</svg>
-					</TopBarButton>
-				</TopBar>
-				{filesData.map((file) => (
-					<FileItem
-						active={file.name === activeFile.name}
-						key={file.name}
-						onClick={() => changeActiveFile(file)}>
-						<div>
-							<AddLanguageLogo fileName={file.name} />
-						</div>
-						<DeleteButton
-							aria-label={`Delete ${file.name}`}
-							title='Delete file'
-							onClick={(ev: MouseEvent<HTMLButtonElement>) => deleteFile(ev, file.name)}>
-							<svg width='14' height='14' viewBox='0 0 24 24' fill='#f5f5f5'>
-								<path d='M3 6l3 18h12l3-18h-18zm19-4v2h-20v-2h5.711c.9 0 1.631-1.099 1.631-2h5.316c0 .901.73 2 1.631 2h5.711z' />
-							</svg>
-						</DeleteButton>
-					</FileItem>
-				))}
-			</Files>
-		</SidebarSection>
-	);
+      <WorkbenchDialog ref={dialogRef} onClose={() => setDialogState(null)}>
+        {dialogState?.type === 'new-file' && (
+          <form onSubmit={createFile}>
+            <h2>New file</h2>
+            <label htmlFor='new-file-name'>File name<input id='new-file-name' name='fileName' autoFocus value={dialogValue} onChange={(event) => setDialogValue(event.target.value)} placeholder='component.html' /></label>
+            {dialogError && <DialogError role='alert'>{dialogError}</DialogError>}
+            <DialogActions><DialogButton type='button' onClick={closeDialog}>Cancel</DialogButton><DialogButton $primary type='submit'>Create file</DialogButton></DialogActions>
+          </form>
+        )}
+        {dialogState?.type === 'open-project' && (
+          <form onSubmit={openProject}>
+            <h2>Open saved project</h2>
+            <p>Opening a project replaces the files currently in this workbench.</p>
+            <label htmlFor='project-id'>Project ID<input id='project-id' name='projectId' autoFocus value={dialogValue} onChange={(event) => setDialogValue(event.target.value)} placeholder='32-character Project ID' /></label>
+            {dialogError && <DialogError role='alert'>{dialogError}</DialogError>}
+            <DialogActions><DialogButton type='button' onClick={closeDialog}>Cancel</DialogButton><DialogButton $primary type='submit' disabled={isOpening}>{isOpening ? 'Opening…' : 'Open project'}</DialogButton></DialogActions>
+          </form>
+        )}
+        {dialogState?.type === 'delete-file' && (
+          <form onSubmit={deleteFile}>
+            <h2>Delete {dialogState.filename}?</h2>
+            <p>This removes the file from the current project.</p>
+            {dialogError && <DialogError role='alert'>{dialogError}</DialogError>}
+            <DialogActions><DialogButton type='button' onClick={closeDialog}>Cancel</DialogButton><DialogButton $danger type='submit'>Delete file</DialogButton></DialogActions>
+          </form>
+        )}
+      </WorkbenchDialog>
+    </SidebarShell>
+  );
 };
 
 export default Sidebar;

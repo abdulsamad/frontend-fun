@@ -10,6 +10,7 @@
 		"allotment": "^1.20.5",
 		"beautiful-react-hooks": "^5.0.3",
 		"emmet-monaco-es": "^5.7.0",
+		"jotai": "^2.20.3",
 		"localforage": "^1.10.0",
 		"monaco-editor": "^0.56.0",
 		"react": "^19.2.8",

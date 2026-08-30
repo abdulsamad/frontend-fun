@@ -1,57 +1,102 @@
 import styled from 'styled-components';
 
-export const Nav = styled.nav`
+export const EditorTabs = styled.nav`
   display: flex;
-  background-color: #161616;
-  color: #d4d4d4;
+  min-block-size: 35px;
   overflow-x: auto;
+  overflow-y: hidden;
+  border-block-end: 1px solid var(--workbench-border);
+  background: var(--workbench-canvas);
 `;
 
-interface NavItemProps {
-  active?: boolean;
-}
+export const TabList = styled.div`
+  display: flex;
+  min-inline-size: min-content;
+`;
 
-export const NavItem = styled.div<NavItemProps>`
-  border: none;
-  background-color: ${({ active }) => (active ? '#1E1E1E' : '#2d2d2d')};
-  padding: 5px 10px;
+export const Tab = styled.div<{ $active?: boolean }>`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28px;
+  align-items: center;
+  min-inline-size: 118px;
+  max-inline-size: 220px;
+  border-inline-end: 1px solid var(--workbench-border);
+  border-block-start: 1px solid ${({ $active }) => ($active ? 'var(--workbench-focus)' : 'transparent')};
+  background: ${({ $active }) => ($active ? 'var(--workbench-editor)' : 'var(--workbench-canvas)')};
+  color: ${({ $active }) => ($active ? 'var(--workbench-text)' : 'var(--workbench-muted)')};
+
+  &:hover {
+    background: ${({ $active }) => ($active ? 'var(--workbench-editor)' : 'var(--workbench-hover)')};
+  }
+`;
+
+export const TabButton = styled.button`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  min-inline-size: 0;
+  block-size: 34px;
+  padding-inline: 10px 4px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
 
-  &:hover { background-color: #37373d; }
-
-	&:focus-visible { outline: 2px solid #03a9f4; outline-offset: -2px; }
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 `;
 
 export const CloseButton = styled.button`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 3px;
-  color: #b8b8b8;
-  border: 0;
+  display: grid;
+  place-items: center;
+  inline-size: 24px;
+  block-size: 24px;
   padding: 0;
+  border: 0;
+  border-radius: 4px;
   background: transparent;
+  color: inherit;
   cursor: pointer;
 
-  &:hover { background: #4a4a4f; color: #fff; }
-  &:disabled { opacity: 0.4; cursor: not-allowed; }
+  &:hover:not(:disabled) {
+    background: #3c3c3c;
+    color: #fff;
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: default;
+  }
 `;
 
-interface WrapButtonProps {
-  active?: boolean;
-}
-
-export const WrapButton = styled.button<WrapButtonProps>`
-  height: 100%;
+export const EditorActions = styled.div`
+  position: sticky;
+  inset-inline-end: 0;
   display: flex;
   align-items: center;
-  border: none;
-  margin-left: auto;
-  background-color: ${({ active }) => (active ? '' : '#2d2d2d')};
+  margin-inline-start: auto;
+  padding-inline: 4px;
+  border-inline-start: 1px solid var(--workbench-border);
+  background: var(--workbench-canvas);
+`;
 
-	&:focus-visible { outline: 2px solid #03a9f4; outline-offset: -2px; }
+export const ActionButton = styled.button<{ $active?: boolean }>`
+  display: grid;
+  place-items: center;
+  min-inline-size: 28px;
+  min-block-size: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: ${({ $active }) => ($active ? 'var(--workbench-selected)' : 'transparent')};
+  color: ${({ $active }) => ($active ? 'var(--workbench-text)' : 'var(--workbench-muted)')};
+  cursor: pointer;
+
+  &:hover {
+    background: var(--workbench-hover);
+    color: var(--workbench-text);
+  }
 `;

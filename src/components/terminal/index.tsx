@@ -1,148 +1,158 @@
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal as XTermTerminal } from '@xterm/xterm';
+import { useAtomValue, useSetAtom } from 'jotai';
 
-import { useAppContext } from '../../context';
+import '@xterm/xterm/css/xterm.css';
 
-import TerminalContainer from './Terminal';
-import commandOuputs from './commands';
-import { getLanguageFromFilename, isValidFilename } from '../../context/validation';
+import { addProjectFileAtom, projectFileNamesAtom, removeProjectFileAtom } from '../../state/projectAtoms';
+import { getLanguageFromFilename, isValidFilename } from '../../state/validation';
+import Icon from '../Icon';
+import TerminalShell, { TerminalAction, TerminalHeader, TerminalViewport } from './Terminal';
+import commandOutputs from './commands';
 
-const Terminal: FC = () => {
-	const { filesList, addFile, removeFile } = useAppContext();
-	const [terminalText, setTerminalText] = useState('');
-	const terminalElementRef = useRef<HTMLDivElement | null>(null);
-	const xTermRef = useRef<XTermTerminal | null>(null);
-	const onDataRef = useRef<(data: string) => void>(() => undefined);
-	const fitAddon = useMemo(() => new FitAddon(), []);
-	const terminalHostname = useMemo(() => `$root@${window.location.hostname}~`, []);
+const Terminal = () => {
+  const filesList = useAtomValue(projectFileNamesAtom);
+  const addFile = useSetAtom(addProjectFileAtom);
+  const removeFile = useSetAtom(removeProjectFileAtom);
+  const [terminalText, setTerminalText] = useState('');
+  const terminalElementRef = useRef<HTMLDivElement | null>(null);
+  const viewportRef = useRef<HTMLDivElement | null>(null);
+  const xTermRef = useRef<XTermTerminal | null>(null);
+  const onDataRef = useRef<(data: string) => void>(() => undefined);
+  const fitAddon = useMemo(() => new FitAddon(), []);
+  const terminalPrompt = useMemo(() => `root@${window.location.hostname}:~$ `, []);
 
-	useEffect(() => {
-		if (!terminalElementRef.current) return;
-		const terminal = new XTermTerminal({
-			theme: { background: '#131313', cursor: '#00FF00', foreground: '#00FF00' },
-		});
-		xTermRef.current = terminal;
-		terminal.loadAddon(fitAddon);
-		terminal.open(terminalElementRef.current);
-		const dataSubscription = terminal.onData((data) => onDataRef.current(data));
+  const resetTerminal = () => {
+    const terminal = xTermRef.current;
+    if (!terminal) return;
+    terminal.reset();
+    setTerminalText('');
+    terminal.write(terminalPrompt);
+  };
 
-		// prettier-ignore
-		terminal.writeln('Enter "help" to see the list of supported commands\r\n\rPress (Ctrl + L) to clear the console');
-		terminal.write(terminalHostname);
-		fitAddon.fit();
-		const onResize = () => fitAddon.fit();
-		window.addEventListener('resize', onResize);
-		return () => {
-			window.removeEventListener('resize', onResize);
-			dataSubscription.dispose();
-			terminal.dispose();
-			xTermRef.current = null;
-		};
-	}, [fitAddon, terminalHostname]);
+  useEffect(() => {
+    if (!terminalElementRef.current || !viewportRef.current) return;
+    const terminal = new XTermTerminal({
+      theme: {
+        background: '#1F1F1F',
+        cursor: '#AEAFAD',
+        foreground: '#CCCCCC',
+        selectionBackground: '#264F78',
+      },
+      fontFamily: "'Fira Code', 'SFMono-Regular', Consolas, monospace",
+      fontSize: 13,
+      lineHeight: 1.2,
+      cursorBlink: true,
+    });
+    xTermRef.current = terminal;
+    terminal.loadAddon(fitAddon);
+    terminal.open(terminalElementRef.current);
+    const dataSubscription = terminal.onData((data) => onDataRef.current(data));
 
-	const onData = (data: string) => {
-		const xterm = xTermRef.current;
-		const code = data.charCodeAt(0);
-		const touchMatch = terminalText.match(/^touch\s+([^\s]+)$/i);
-		const rmMatch = terminalText.match(/^rm\s+([^\s]+)$/i);
+    let frame = 0;
+    let initialized = false;
+    const fit = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        try {
+          fitAddon.fit();
+          if (!initialized && terminal.cols > 2) {
+            initialized = true;
+            terminal.writeln('Type "help" to list supported commands. Ctrl+L clears the terminal.');
+            terminal.write(`\r\n${terminalPrompt}`);
+          }
+        } catch { /* The pane may be hidden between responsive views. */ }
+      });
+    };
+    const observer = new ResizeObserver(fit);
+    observer.observe(viewportRef.current);
+    fit();
 
-		if (xterm === null) return;
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      dataSubscription.dispose();
+      terminal.dispose();
+      xTermRef.current = null;
+    };
+  }, [fitAddon, terminalPrompt]);
 
-		//  clear command
-		if (terminalText === 'clear' || terminalText === 'cls') {
-			xterm.reset();
-			setTerminalText('');
-			xterm.write(terminalHostname);
-			return false;
-		}
+  const onData = (data: string) => {
+    const terminal = xTermRef.current;
+    const code = data.charCodeAt(0);
+    const touchMatch = terminalText.match(/^touch\s+([^\s]+)$/i);
+    const rmMatch = terminalText.match(/^rm\s+([^\s]+)$/i);
+    if (!terminal) return;
 
-		// touch Command
-		else if (touchMatch) {
-			const filename = touchMatch[1];
-			if (!isValidFilename(filename)) {
-				xterm.write(`\r\n\rError: use a valid .html, .css, or .js filename\r\n\r${terminalHostname}`);
-				setTerminalText('');
-				return;
-			}
-			const isFilePresent = filesList.filter((name) => name === filename).length;
-			const extension = getLanguageFromFilename(filename);
+    if (terminalText === 'clear' || terminalText === 'cls') {
+      resetTerminal();
+      return;
+    }
+    if (touchMatch) {
+      const filename = touchMatch[1];
+      if (!isValidFilename(filename)) {
+        terminal.write(`\r\nError: use a valid .html, .css, or .js filename\r\n${terminalPrompt}`);
+      } else if (filesList.includes(filename)) {
+        terminal.write(`\r\nError: a file with that name already exists\r\n${terminalPrompt}`);
+      } else {
+        addFile({ name: filename, language: getLanguageFromFilename(filename), value: '' });
+        terminal.write(`\r\n${terminalPrompt}`);
+      }
+      setTerminalText('');
+      return;
+    }
+    if (rmMatch) {
+      const filename = rmMatch[1];
+      if (!filesList.includes(filename)) terminal.write(`\r\nError: file not found: ${filename}`);
+      else removeFile(filename);
+      setTerminalText('');
+      terminal.write(`\r\n${terminalPrompt}`);
+      return;
+    }
 
-			if (isFilePresent) {
-				setTerminalText('');
-				xterm.write(`\r\n\rError: File name cannot be same`);
-				xterm.write(`\r\n\r${terminalHostname}`);
-				return false;
-			}
+    switch (code) {
+      case 12:
+        resetTerminal();
+        break;
+      case 13:
+        commandOutputs(terminalText, filesList).then((output) => {
+          terminal.write(`\r\n${output}\r\n${terminalPrompt}`);
+          setTerminalText('');
+        });
+        break;
+      case 27:
+        if (!data.endsWith('A') && !data.endsWith('B')) {
+          terminal.write(data);
+          setTerminalText((current) => current + data);
+        }
+        break;
+      case 127:
+        if (terminalText) {
+          terminal.write('\b \b');
+          setTerminalText((current) => current.slice(0, -1));
+        }
+        break;
+      default:
+        terminal.write(data);
+        setTerminalText((current) => current + data);
+    }
+  };
+  onDataRef.current = onData;
 
-			addFile({ name: filename, language: extension, value: '' });
-			setTerminalText('');
-			xterm.write(`\r\n\r${terminalHostname}`);
-			return false;
-		}
-
-		// rm command
-		else if (rmMatch) {
-			const filename = rmMatch[1];
-			if (!filesList.includes(filename)) {
-				xterm.write(`\r\n\rError: file not found: ${filename}`);
-				setTerminalText('');
-				xterm.write(`\r\n\r${terminalHostname}`);
-				return;
-			}
-			removeFile(filename);
-			setTerminalText('');
-			xterm.write(`\r\n\r${terminalHostname}`);
-			return false;
-		}
-
-		switch (code) {
-			case 12:
-				// CTRL + L (Clear Terminal)
-				xterm.reset();
-				setTerminalText('');
-				xterm.write(terminalHostname);
-				break;
-
-			case 13:
-				// Enter key
-				commandOuputs(terminalText, filesList).then((output) => {
-					xterm.write(`\r\n${output}\r\n`);
-					xterm.write(terminalHostname);
-					setTerminalText('');
-				});
-				break;
-
-			case 27:
-				// Filter up and down arrow press
-				if (data.endsWith('A') || data.endsWith('B')) return;
-
-				// Write to terminal on left and right arrow press
-				xterm.write(data);
-				setTerminalText((prevState) => prevState + data);
-				break;
-
-			case 127:
-				// Backspace
-				if (terminalText) {
-					xterm.write('\b \b');
-					setTerminalText((prevState) => prevState.substring(0, prevState.length - 1));
-				}
-				break;
-
-			default:
-				// General keys
-				xterm.write(data);
-				setTerminalText((prevState) => prevState + data);
-		}
-	};
-	onDataRef.current = onData;
-
-	return (
-		<TerminalContainer id='terminal'>
-			<div ref={terminalElementRef} className='terminal-container' />
-		</TerminalContainer>
-	);
+  return (
+    <TerminalShell id='terminal' aria-label='Terminal'>
+      <TerminalHeader>
+        <h2>Terminal</h2>
+        <TerminalAction type='button' aria-label='Clear terminal' title='Clear terminal' onClick={resetTerminal}>
+          <Icon name='delete' size={14} />
+        </TerminalAction>
+      </TerminalHeader>
+      <TerminalViewport ref={viewportRef}>
+        <div ref={terminalElementRef} className='terminal-container' />
+      </TerminalViewport>
+    </TerminalShell>
+  );
 };
 
 export default Terminal;

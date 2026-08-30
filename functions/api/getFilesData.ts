@@ -1,5 +1,5 @@
 import { Env, isProjectId, projectKey, respond } from './_shared';
-import { validateFiles } from '../../src/context/validation';
+import { validateFiles } from '../../src/state/validation';
 import { FilesPayload } from '../../src/shared/filesContract';
 
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {

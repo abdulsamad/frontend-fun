@@ -1,20 +1,24 @@
 import styled from 'styled-components';
 
-const Sidebar = styled.section`
-	height: 100vh;
-	width: 100%;
-	min-width: 250px;
-	overflow: auto;
-	color: #f5f5f5;
-	background-color: #131313;
-	display: flex;
-	min-height: 0;
+const Sidebar = styled.aside`
+  display: flex;
+  block-size: 100%;
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 0;
+  overflow: hidden;
+  border-inline-end: 1px solid var(--workbench-border);
+  background: var(--workbench-canvas);
+  color: var(--workbench-text);
+`;
 
-	@media only screen and (max-width: 768px) {
-		height: 25dvh;
-		min-height: 180px;
-		width: 100% !important;
-	}
+export const ExplorerPane = styled.section`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-inline-size: 0;
+  min-block-size: 0;
+  background: var(--workbench-canvas);
 `;
 
 export default Sidebar;

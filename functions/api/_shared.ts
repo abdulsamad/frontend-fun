@@ -1,4 +1,4 @@
-import { validateFiles } from '../../src/context/validation';
+import { validateFiles } from '../../src/state/validation';
 import { FilesPayload } from '../../src/shared/filesContract';
 
 export interface Env {

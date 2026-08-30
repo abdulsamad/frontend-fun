@@ -1,43 +1,45 @@
 import styled from 'styled-components';
 
-export const Panel = styled.div`
-  background-color: #252525;
-  width: 50px;
-  box-shadow: 2px 3px 3px #2f2f2f;
+export const ActivityBar = styled.nav`
+  display: flex;
+  flex: 0 0 48px;
+  flex-direction: column;
+  align-items: stretch;
+  border-inline-end: 1px solid var(--workbench-border);
+  background: var(--workbench-canvas);
 `;
 
-interface PanelItemProps {
-  active?: boolean;
-}
+export const ActivityButton = styled.button<{ $active?: boolean }>`
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-block-size: 48px;
+  border: 0;
+  background: transparent;
+  color: ${({ $active }) => ($active ? 'var(--workbench-text)' : 'var(--workbench-muted)')};
+  cursor: pointer;
 
-export const PanelItem = styled.button<PanelItemProps>`
-  height: 50px;
-  width: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-left: ${({ active }) => (active ? '3px solid #fff' : 'none')};
-  background-color: ${({ active }) => (active ? '#21252B' : 'transparent')};
-  background-position: center;
-  transition: background 0.8s;
+  &::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: 2px;
+    background: ${({ $active }) => ($active ? 'var(--workbench-focus)' : 'transparent')};
+  }
 
   &:hover {
-    background: #673ab7 radial-gradient(circle, transparent 1%, #9575cd 1%) center/15000%;
+    color: var(--workbench-text);
   }
-
-  &:active {
-    background-color: #9575cd;
-    background-size: 100%;
-    transition: background 0s;
-  }
-
-	&:focus-visible { outline: 2px solid #03a9f4; outline-offset: -2px; }
 `;
 
-export const UserId = styled.span`
+export const UserId = styled.code`
+  display: inline-block;
+  margin-block-start: 6px;
+  padding: 3px 5px;
+  border-radius: 2px;
+  background: var(--workbench-editor);
+  color: var(--workbench-success);
+  font-family: var(--font-code);
   user-select: all;
-  background-color: #03a9f4;
-  padding: 5px;
-  border-radius: 5px;
 `;

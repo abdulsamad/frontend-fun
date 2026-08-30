@@ -1,4 +1,6 @@
-import { fileData } from './types';
+import { ProjectFile } from './types';
+
+// Project validation is shared by local persistence and the remote API client.
 
 const FILENAME_PATTERN = /^[A-Za-z0-9_-]{1,50}\.(html|css|js)$/i;
 const MAX_FILE_VALUE_SIZE = 500_000;
@@ -12,9 +14,9 @@ export const getLanguageFromFilename = (name: string): string => {
 export const isValidFilename = (name: unknown): name is string =>
   typeof name === 'string' && FILENAME_PATTERN.test(name);
 
-export const isValidFile = (file: unknown): file is fileData => {
+export const isValidFile = (file: unknown): file is ProjectFile => {
   if (!file || typeof file !== 'object') return false;
-  const candidate = file as fileData;
+  const candidate = file as ProjectFile;
   return (
     isValidFilename(candidate.name) &&
     typeof candidate.language === 'string' &&
@@ -25,7 +27,7 @@ export const isValidFile = (file: unknown): file is fileData => {
   );
 };
 
-export const validateFiles = (value: unknown): fileData[] | null => {
+export const validateFiles = (value: unknown): ProjectFile[] | null => {
   if (!Array.isArray(value) || value.length < 1 || value.length > MAX_FILES) return null;
   const files = value.filter(isValidFile);
   if (files.length !== value.length || new Set(files.map((file) => file.name.toLowerCase())).size !== files.length) return null;
