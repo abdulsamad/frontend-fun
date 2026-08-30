@@ -89,6 +89,8 @@ const GlobalStyle = createGlobalStyle`
 
   .Toastify__toast {
     min-height: 44px;
+    align-items: center;
+    gap: 8px;
     border: 1px solid var(--workbench-border);
     border-radius: 2px;
     background: var(--workbench-elevated);
@@ -96,6 +98,30 @@ const GlobalStyle = createGlobalStyle`
     box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
     font-family: var(--font-interface);
     font-size: 0.8125rem;
+  }
+
+  .Toastify__toast-icon {
+    display: grid;
+    flex: 0 0 18px;
+    align-self: center;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    margin-inline-end: 0;
+  }
+
+  .Toastify__toast-icon > svg,
+  .workbench-toast-content > svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+  }
+
+  .workbench-toast-content {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
   }
 
   .Toastify__close-button {
