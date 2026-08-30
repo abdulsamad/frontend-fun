@@ -100,7 +100,7 @@ const GlobalStyle = createGlobalStyle`
     font-size: 0.8125rem;
   }
 
-  .Toastify__toast-icon {
+  .Toastify__toast .Toastify__toast-icon {
     display: grid;
     flex: 0 0 18px;
     align-self: center;
@@ -110,7 +110,7 @@ const GlobalStyle = createGlobalStyle`
     margin-inline-end: 0;
   }
 
-  .Toastify__toast-icon > svg,
+  .Toastify__toast .Toastify__toast-icon > svg,
   .workbench-toast-content > svg {
     display: block;
     width: 18px;
