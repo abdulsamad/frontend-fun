@@ -1,12 +1,14 @@
 # Frontend Fun
 
-Frontend Fun is a browser-based HTML, CSS, and JavaScript workbench for practice, quick mockups, and UI experiments.
+Frontend Fun is a lightweight, browser-based frontend playground for writing, previewing, and sharing HTML, CSS, and JavaScript. It combines a VS Code-inspired workbench with a live sandboxed preview, integrated terminal, responsive layouts, local autosave, and anonymous remote project sharing.
 
 [![Deploy to Cloudflare Pages](https://img.shields.io/badge/deploy-Cloudflare%20Pages-orange)](https://pages.cloudflare.com/)
 
 ## Features
 
 - VS Code-style Explorer, editor tabs, status bar, terminal, and resizable panes
+- VS Code-style top bar with One Dark, VS Code Dark, and High Contrast themes
+- Configurable word wrap, editor font size, terminal visibility, and auto-save
 - Sandboxed live preview for HTML, CSS, and JavaScript
 - Local autosave and offline support
 - Remote project save and restore with a Project ID
