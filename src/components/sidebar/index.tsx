@@ -8,11 +8,12 @@ import {
   projectFileNamesAtom,
   projectFileSummariesAtom,
   projectFilesAtom,
+  projectDependenciesAtom,
   removeProjectFileAtom,
   replaceProjectFilesAtom,
   selectProjectFileAtom,
 } from '../../state/projectAtoms';
-import { getLanguageFromFilename, isValidFilename, validateFiles } from '../../state/validation';
+import { getLanguageFromFilename, isValidFilename, validateDependencies, validateFiles } from '../../state/validation';
 import { FilesPayload, FilesResponse } from '../../shared/filesContract';
 import AddLanguageLogo from '../../utils/AddLanguageLogo';
 import Icon from '../Icon';
@@ -113,6 +114,7 @@ const Sidebar = () => {
     }
     const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
     const filesData = store.get(projectFilesAtom);
+    const dependencies = store.get(projectDependenciesAtom);
 
     try {
       if (id && !version) {
@@ -131,7 +133,7 @@ const Sidebar = () => {
       const response = await fetch(id ? `/api/saveFilesData?id=${encodeURIComponent(id)}` : '/api/saveFilesData', {
         method: 'POST',
         headers: saveHeaders,
-        body: JSON.stringify({ filesData } satisfies FilesPayload),
+        body: JSON.stringify({ filesData, dependencies } satisfies FilesPayload),
       });
       const data = await response.json() as FilesResponse;
       if (!response.ok || !data.id || !data.version) {
@@ -162,10 +164,12 @@ const Sidebar = () => {
       const response = await fetch(`/api/getFilesData?id=${encodeURIComponent(id)}`);
       const data = await response.json() as FilesResponse;
       const imported = validateFiles(data.filesData);
-      if (!response.ok || !imported || !data.version) throw new Error(data.err || 'Project not found.');
+      const dependencies = validateDependencies(data.dependencies);
+      if (!response.ok || !imported || !dependencies || !data.version) throw new Error(data.err || 'Project not found.');
       localStorage.setItem('id', id);
       localStorage.setItem('projectVersion', data.version);
       replaceFiles(imported);
+      store.set(projectDependenciesAtom, dependencies);
       closeDialog();
       toast.success('Project opened.');
     } catch (error) {

@@ -2,7 +2,7 @@ import { atom } from 'jotai';
 import { selectAtom } from 'jotai/utils';
 
 import { defaultActiveFile, defaultFilesData, defaultFilesList } from './data';
-import { ProjectFile } from './types';
+import { PreviewDependency, ProjectFile } from './types';
 import { validateFiles } from './validation';
 
 export interface ProjectFileSummary {
@@ -14,6 +14,7 @@ export const projectFilesAtom = atom<ProjectFile[]>(defaultFilesData);
 export const activeFileNameAtom = atom(defaultActiveFile.name);
 export const openFileNamesAtom = atom<string[]>(defaultFilesList);
 export const projectHydratedAtom = atom(false);
+export const projectDependenciesAtom = atom<PreviewDependency[]>([]);
 
 const summariesEqual = (left: ProjectFileSummary[], right: ProjectFileSummary[]) =>
   left.length === right.length && left.every((file, index) => (

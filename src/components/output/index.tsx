@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAtomValue } from 'jotai';
 
-import { projectFilesAtom } from '../../state/projectAtoms';
+import { projectDependenciesAtom, projectFilesAtom } from '../../state/projectAtoms';
 import {
   createPreviewBundle,
   createPreviewShell,
@@ -13,7 +13,7 @@ import {
 } from '../../utils/createPreviewBundle';
 import Icon from '../Icon';
 import PreviewPane from './Output';
-import { PreviewErrorBanner, PreviewFrame } from './Iframe';
+import { ClearDiagnosticsButton, PreviewDiagnostics, PreviewErrorBanner, PreviewFrame } from './Iframe';
 import { PreviewActions, PreviewAddressBar, PreviewLabel, PreviewStatus, PreviewToolbar, ReloadButton } from './Nav';
 
 const UPDATE_DELAY = 200;
@@ -29,10 +29,12 @@ const useDebouncedBundle = (bundle: PreviewBundle) => {
 
 const Preview = () => {
   const filesData = useAtomValue(projectFilesAtom);
-  const bundle = useMemo(() => createPreviewBundle(filesData), [filesData]);
+  const dependencies = useAtomValue(projectDependenciesAtom);
+  const bundle = useMemo(() => createPreviewBundle(filesData, dependencies), [filesData, dependencies]);
   const debouncedBundle = useDebouncedBundle(bundle);
   const [status, setStatus] = useState<PreviewStatusValue>('updating');
   const [previewError, setPreviewError] = useState<PreviewError | null>(null);
+  const [diagnostics, setDiagnostics] = useState<PreviewError[]>([]);
   const [messageListenerReady, setMessageListenerReady] = useState(false);
   const [documentRevision, setDocumentRevision] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -41,7 +43,16 @@ const Preview = () => {
   const renderId = useRef(0);
   const currentBundle = useRef(debouncedBundle);
   const previousBundle = useRef(debouncedBundle);
-  const shell = useMemo(() => createPreviewShell(channelId), [channelId]);
+  const dependencyOrigins = useMemo(() => [...new Set(dependencies.flatMap(({ enabled, url }) => {
+    if (!enabled) return [];
+    try {
+      const dependencyUrl = new URL(url);
+      return dependencyUrl.protocol === 'https:' ? [dependencyUrl.origin] : [];
+    } catch {
+      return [];
+    }
+  }))], [dependencies]);
+  const shell = useMemo(() => createPreviewShell(channelId, dependencyOrigins), [channelId, dependencyOrigins]);
 
   const postToFrame = (message: PreviewHostMessage) => {
     iframeRef.current?.contentWindow?.postMessage(message, '*');
@@ -58,12 +69,13 @@ const Preview = () => {
     const previous = previousBundle.current;
     if (previous === debouncedBundle) return;
     previousBundle.current = debouncedBundle;
-    const documentChanged = previous.markup !== debouncedBundle.markup || previous.scripts !== debouncedBundle.scripts;
+    const documentChanged = previous.markup !== debouncedBundle.markup || previous.scripts !== debouncedBundle.scripts || previous.dependencies !== debouncedBundle.dependencies;
     const stylesChanged = previous.styles !== debouncedBundle.styles;
     if (!documentChanged && !stylesChanged) return;
 
     hasPreviewError.current = false;
     setPreviewError(null);
+    setDiagnostics([]);
     setStatus('updating');
 
     if (documentChanged) {
@@ -81,11 +93,14 @@ const Preview = () => {
       if (event.source !== iframeRef.current?.contentWindow || event.data?.channelId !== channelId) return;
       if (event.data.type === 'preview:ready') {
         renderCurrentFrame();
-      } else if (event.data.type === 'preview:rendered') {
+      } else if (event.data.type === 'preview:rendered' && event.data.renderId === renderId.current) {
         if (!hasPreviewError.current) setStatus('ready');
       } else if (event.data.type === 'preview:error') {
         hasPreviewError.current = true;
-        setPreviewError({ message: event.data.message, line: event.data.line, column: event.data.column });
+        if (event.data.renderId !== renderId.current) return;
+        const diagnostic = { category: event.data.category, message: event.data.message, source: event.data.source, line: event.data.line, column: event.data.column } satisfies PreviewError;
+        setDiagnostics((current) => [...current, diagnostic].slice(-50));
+        setPreviewError(diagnostic);
         setStatus('error');
       }
     };
@@ -98,6 +113,7 @@ const Preview = () => {
     hasPreviewError.current = false;
     renderId.current += 1;
     setPreviewError(null);
+    setDiagnostics([]);
     setStatus('updating');
     setDocumentRevision((revision) => revision + 1);
   };
@@ -120,9 +136,15 @@ const Preview = () => {
       </PreviewToolbar>
       {previewError && (
         <PreviewErrorBanner role='alert'>
-          <strong>Preview error</strong>
+          <strong>{previewError.category} error</strong>
           <span>{previewError.message}{location}</span>
         </PreviewErrorBanner>
+      )}
+      {diagnostics.length > 0 && (
+        <PreviewDiagnostics aria-label='Preview diagnostics'>
+          <h2>Diagnostics ({diagnostics.length}) <ClearDiagnosticsButton type='button' onClick={() => { setDiagnostics([]); setPreviewError(null); }}>Clear</ClearDiagnosticsButton></h2>
+          <ul>{diagnostics.map((diagnostic, index) => <li key={`${diagnostic.message}-${index}`}><strong>{diagnostic.category}</strong> {diagnostic.source && `${diagnostic.source} `}{diagnostic.message}{diagnostic.line ? ` at ${diagnostic.line}${diagnostic.column ? `:${diagnostic.column}` : ''}` : ''}</li>)}</ul>
+        </PreviewDiagnostics>
       )}
       {messageListenerReady && (
         <PreviewFrame

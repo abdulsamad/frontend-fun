@@ -1,4 +1,4 @@
-import { validateFiles } from '../../src/state/validation';
+import { validateDependencies, validateFiles } from '../../src/state/validation';
 import { FilesPayload } from '../../src/shared/filesContract';
 
 export interface Env {
@@ -36,9 +36,11 @@ export const parseFilesPayload = async (request: Request) => {
   }
   const filesData = validateFiles(body?.filesData);
   if (!filesData) return { error: respond(400, { err: 'Invalid files data.' }) };
-  const serialized = JSON.stringify({ filesData });
+  const dependencies = validateDependencies(body?.dependencies);
+  if (!dependencies) return { error: respond(400, { err: 'Invalid preview dependencies.' }) };
+  const serialized = JSON.stringify({ filesData, dependencies });
   if (new TextEncoder().encode(serialized).byteLength > MAX_PROJECT_SIZE) {
     return { error: respond(413, { err: 'Project is larger than the 5 MiB remote save limit.' }) };
   }
-  return { filesData, serialized };
+  return { filesData, dependencies, serialized };
 };

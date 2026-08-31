@@ -21,6 +21,7 @@ import GlobalContainer, {
 } from './styles/GlobalContainer';
 import ProjectStateEffects from './state/ProjectStateEffects';
 import { defaultWorkbenchSettings, workbenchSettingsAtom } from './state/settings';
+import Dependencies from './components/dependencies';
 
 const Sidebar = lazy(() => import('./components/sidebar'));
 const Editor = lazy(() => import('./components/editor'));
@@ -175,6 +176,7 @@ const SettingsBar = () => {
   return (
     <WorkbenchTopBar>
       <TopBarBrand>Frontend Fun</TopBarBrand>
+      <Dependencies />
       <TopBarMenu>
         <summary>View</summary>
         <TopBarMenuPanel>

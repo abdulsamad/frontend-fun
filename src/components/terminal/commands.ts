@@ -5,7 +5,7 @@ const commandList = [
   'echo <text>', 'copy <file>', 'download <file>', 'preview reload', 'theme <name>',
   'wrap <on|off>', 'font <size>', 'mic [stop]', 'record [seconds]', 'listen', 'speak <text>',
   'camera', 'location', 'notify <text>', 'share', 'online', 'clipboard',
-  'clear', 'coffee', 'ascii', 'matrix', 'hack', 'joke', 'intro', 'advice',
+  'clear', 'coffee', 'ascii', 'matrix', 'joke', 'intro', 'advice',
   'touch <file>', 'rm <file>',
 ];
 
@@ -29,11 +29,25 @@ const getSpeechRecognition = () => {
 
 const unsupported = (name: string) => `${name}: this browser does not support that API.`;
 
+const hiddenHackResponse = (input: string) => {
+  const command = input.trim().toLowerCase();
+  if (command === 'rm -rf /') return 'Protected: the playground refuses to delete the universe. 🛡️';
+  if (command === 'passwd') return 'Password strength: emotionally unavailable.';
+  if (command === 'id') return 'uid=1000(frontend-fun) gid=1000(playground) groups=1000(playground)';
+  if (command.startsWith('ssh ')) return 'localhost is an iframe, not a server. Connection closed. 🧱';
+  if (command === 'whoami') return 'frontend-fun-user (root privileges: absolutely not)';
+  return 'Root access requested...\r\n[████████████████] 100%\r\nDenied: browser sandbox detected.\r\nStatus: playground remains safe 😎';
+};
+
 const commandOutputs = async (input: string, files: ProjectFile[], history: string[] = []) => {
   const [command, ...argumentParts] = input.trim().split(/\s+/);
   const args = argumentParts.join(' ');
   const normalized = command?.toLowerCase();
   const file = files.find((candidate) => candidate.name.toLowerCase() === args.toLowerCase());
+
+  if (['hack', 'sudo', 'su', 'root', 'id', 'passwd'].includes(normalized) || input.trim().toLowerCase() === 'rm -rf /' || normalized === 'ssh') {
+    return hiddenHackResponse(input);
+  }
 
   switch (normalized) {
     case 'help':

@@ -1,5 +1,5 @@
 import { Env, isProjectId, projectKey, respond } from './_shared';
-import { validateFiles } from '../../src/state/validation';
+import { validateDependencies, validateFiles } from '../../src/state/validation';
 import { FilesPayload } from '../../src/shared/filesContract';
 
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
@@ -13,7 +13,9 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     const payload = await savedData.json() as FilesPayload;
     const filesData = validateFiles(payload?.filesData);
     if (!filesData) return respond(422, { err: 'Saved project is corrupted.' });
-    return respond(200, { filesData, version: savedData.etag });
+    const dependencies = validateDependencies(payload?.dependencies);
+    if (!dependencies) return respond(422, { err: 'Saved project dependencies are corrupted.' });
+    return respond(200, { filesData, dependencies, version: savedData.etag });
   } catch (error) {
     console.error('Failed to read saved project', error);
     return respond(500, { err: 'Internal server error.' });

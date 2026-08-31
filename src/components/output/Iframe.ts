@@ -27,3 +27,31 @@ export const PreviewErrorBanner = styled.div`
     white-space: nowrap;
   }
 `;
+
+export const PreviewDiagnostics = styled.section`
+  max-block-size: 150px;
+  overflow: auto;
+  padding: 8px 12px;
+  border-block-end: 1px solid var(--workbench-border);
+  background: #241b1b;
+  color: #f8d7da;
+  font-family: var(--font-code);
+  font-size: 0.6875rem;
+
+  h2 { margin: 0 0 6px; font-family: var(--font-interface); font-size: 0.75rem; }
+  ul { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+  li { overflow-wrap: anywhere; }
+  strong { color: #fff; text-transform: uppercase; }
+`;
+
+export const ClearDiagnosticsButton = styled.button`
+  float: right;
+  border: 1px solid var(--workbench-border);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--workbench-muted);
+  cursor: pointer;
+  font-size: 0.6875rem;
+
+  &:hover { color: var(--workbench-text); }
+`;
