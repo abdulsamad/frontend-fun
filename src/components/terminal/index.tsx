@@ -83,36 +83,12 @@ const Terminal = () => {
   const onData = (data: string) => {
     const terminal = xTermRef.current;
     const code = data.charCodeAt(0);
-    const touchMatch = terminalText.match(/^touch\s+([^\s]+)$/i);
-    const rmMatch = terminalText.match(/^rm\s+([^\s]+)$/i);
     if (!terminal) return;
 
     if (terminalText === 'clear' || terminalText === 'cls') {
       resetTerminal();
       return;
     }
-    if (touchMatch) {
-      const filename = touchMatch[1];
-      if (!isValidFilename(filename)) {
-        terminal.write(`\r\nError: use a valid .html, .css, or .js filename\r\n${terminalPrompt}`);
-      } else if (filesList.includes(filename)) {
-        terminal.write(`\r\nError: a file with that name already exists\r\n${terminalPrompt}`);
-      } else {
-        addFile({ name: filename, language: getLanguageFromFilename(filename), value: '' });
-        terminal.write(`\r\n${terminalPrompt}`);
-      }
-      setTerminalText('');
-      return;
-    }
-    if (rmMatch) {
-      const filename = rmMatch[1];
-      if (!filesList.includes(filename)) terminal.write(`\r\nError: file not found: ${filename}`);
-      else removeFile(filename);
-      setTerminalText('');
-      terminal.write(`\r\n${terminalPrompt}`);
-      return;
-    }
-
     switch (code) {
       case 12:
         resetTerminal();
@@ -120,6 +96,29 @@ const Terminal = () => {
       case 13:
         const command = terminalText.trim();
         if (command) commandHistoryRef.current = [...commandHistoryRef.current.slice(-49), command];
+        const touchMatch = command.match(/^touch\s+([^\s]+)$/i);
+        const rmMatch = command.match(/^rm\s+([^\s]+)$/i);
+        if (touchMatch) {
+          const filename = touchMatch[1];
+          if (!isValidFilename(filename)) {
+            terminal.write(`\r\nError: use a valid .html, .css, or .js filename\r\n${terminalPrompt}`);
+          } else if (filesList.includes(filename)) {
+            terminal.write(`\r\nError: a file with that name already exists\r\n${terminalPrompt}`);
+          } else {
+            addFile({ name: filename, language: getLanguageFromFilename(filename), value: '' });
+            terminal.write(`\r\n${terminalPrompt}`);
+          }
+          setTerminalText('');
+          break;
+        }
+        if (rmMatch) {
+          const filename = rmMatch[1];
+          if (!filesList.includes(filename)) terminal.write(`\r\nError: file not found: ${filename}`);
+          else removeFile(filename);
+          setTerminalText('');
+          terminal.write(`\r\n${terminalPrompt}`);
+          break;
+        }
         commandOutputs(command, projectFiles, commandHistoryRef.current)
           .then((output) => {
             if (output === '__CLEAR__') {
