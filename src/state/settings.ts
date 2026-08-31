@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 
-export type WorkbenchTheme = 'one-dark' | 'vscode-dark' | 'high-contrast';
+export type WorkbenchTheme = 'one-dark' | 'one-dark-pro' | 'vscode-dark' | 'high-contrast';
 
 export interface WorkbenchSettings {
   theme: WorkbenchTheme;

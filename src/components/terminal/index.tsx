@@ -5,7 +5,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 
 import '@xterm/xterm/css/xterm.css';
 
-import { addProjectFileAtom, projectFileNamesAtom, removeProjectFileAtom } from '../../state/projectAtoms';
+import { addProjectFileAtom, projectFileNamesAtom, projectFilesAtom, removeProjectFileAtom } from '../../state/projectAtoms';
 import { getLanguageFromFilename, isValidFilename } from '../../state/validation';
 import Icon from '../Icon';
 import TerminalShell, { TerminalAction, TerminalHeader, TerminalViewport } from './Terminal';
@@ -13,6 +13,7 @@ import commandOutputs from './commands';
 
 const Terminal = () => {
   const filesList = useAtomValue(projectFileNamesAtom);
+  const projectFiles = useAtomValue(projectFilesAtom);
   const addFile = useSetAtom(addProjectFileAtom);
   const removeFile = useSetAtom(removeProjectFileAtom);
   const [terminalText, setTerminalText] = useState('');
@@ -20,6 +21,7 @@ const Terminal = () => {
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const xTermRef = useRef<XTermTerminal | null>(null);
   const onDataRef = useRef<(data: string) => void>(() => undefined);
+  const commandHistoryRef = useRef<string[]>([]);
   const fitAddon = useMemo(() => new FitAddon(), []);
   const terminalPrompt = useMemo(() => `root@${window.location.hostname}:~$ `, []);
 
@@ -116,10 +118,21 @@ const Terminal = () => {
         resetTerminal();
         break;
       case 13:
-        commandOutputs(terminalText, filesList).then((output) => {
-          terminal.write(`\r\n${output}\r\n${terminalPrompt}`);
-          setTerminalText('');
-        });
+        const command = terminalText.trim();
+        if (command) commandHistoryRef.current = [...commandHistoryRef.current.slice(-49), command];
+        commandOutputs(command, projectFiles, commandHistoryRef.current)
+          .then((output) => {
+            if (output === '__CLEAR__') {
+              resetTerminal();
+              return;
+            }
+            terminal.write(`\r\n${output}\r\n${terminalPrompt}`);
+            setTerminalText('');
+          })
+          .catch((error: unknown) => {
+            terminal.write(`\r\nError: ${error instanceof Error ? error.message : 'command failed'}\r\n${terminalPrompt}`);
+            setTerminalText('');
+          });
         break;
       case 27:
         if (!data.endsWith('A') && !data.endsWith('B')) {

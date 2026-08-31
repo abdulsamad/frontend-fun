@@ -40,6 +40,20 @@ const GlobalStyle = createGlobalStyle`
     --workbench-success: #98c379;
   }
 
+  [data-theme='one-dark-pro'] {
+    --workbench-canvas: #181a1f;
+    --workbench-editor: #21252b;
+    --workbench-elevated: #181a1f;
+    --workbench-hover: #2c313c;
+    --workbench-selected: #3e4451;
+    --workbench-border: #101216;
+    --workbench-text: #dcdfe4;
+    --workbench-muted: #7f848e;
+    --workbench-focus: #61afef;
+    --workbench-danger: #e06c75;
+    --workbench-success: #98c379;
+  }
+
   [data-theme='high-contrast'] {
     --workbench-canvas: #000;
     --workbench-editor: #050505;

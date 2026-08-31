@@ -16,7 +16,7 @@ import AddLanguageLogo from '../../utils/AddLanguageLogo';
 import Icon from '../Icon';
 import EditorGroup, { Breadcrumbs, EditorSurface, StatusBar, StatusGroup } from './Editor';
 import { ActionButton, CloseButton, EditorActions, EditorTabs, Tab, TabButton, TabList } from './Nav';
-import { customTheme, oneDarkTheme } from './themes';
+import { customTheme, oneDarkProTheme, oneDarkTheme } from './themes';
 
 const Editor = () => {
   const activeFile = useAtomValue(activeFileAtom);
@@ -107,7 +107,7 @@ const Editor = () => {
       <Breadcrumbs aria-label='File location'><span>frontend-fun</span><span>{activeFile.name}</span></Breadcrumbs>
       <EditorSurface>
         <MonacoEditor
-          theme={settings.theme === 'one-dark' ? 'frontend-fun-one-dark' : 'frontend-fun-dark'}
+          theme={settings.theme === 'one-dark-pro' ? 'frontend-fun-one-dark-pro' : settings.theme === 'one-dark' ? 'frontend-fun-one-dark' : 'frontend-fun-dark'}
           language={activeFile.language}
           value={activeFile.value}
           path={activeFile.name}
@@ -116,6 +116,7 @@ const Editor = () => {
           beforeMount={(monaco) => {
             monaco.editor.defineTheme('frontend-fun-dark', customTheme);
             monaco.editor.defineTheme('frontend-fun-one-dark', oneDarkTheme);
+            monaco.editor.defineTheme('frontend-fun-one-dark-pro', oneDarkProTheme);
           }}
           options={{
             automaticLayout: true,

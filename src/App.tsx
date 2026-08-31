@@ -78,32 +78,31 @@ const LazyPane = ({ label, children }: { label: string; children: ReactNode }) =
   </Suspense>
 );
 
-const DesktopWorkbench = () => (
-  <Allotment defaultSizes={[280, 660, 500]} proportionalLayout separator>
-    <Allotment.Pane minSize={240} maxSize={360} preferredSize={280}>
-      <LazyPane label='Explorer'><Sidebar /></LazyPane>
-    </Allotment.Pane>
-    <Allotment.Pane minSize={360} preferredSize='46%'>
-      <Allotment defaultSizes={[70, 30]} vertical proportionalLayout separator>
-        <Allotment.Pane minSize={280}>
-          <LazyPane label='editor'><Editor /></LazyPane>
-        </Allotment.Pane>
-        <TerminalPane />
-      </Allotment>
-    </Allotment.Pane>
-    <Allotment.Pane minSize={360} preferredSize='36%'>
-      <LazyPane label='preview'><PreviewPane /></LazyPane>
-    </Allotment.Pane>
-  </Allotment>
-);
-
-const TerminalPane = () => {
+const DesktopWorkbench = () => {
   const showTerminal = useAtomValue(workbenchSettingsAtom).showTerminal;
-  if (!showTerminal) return null;
   return (
-    <Allotment.Pane minSize={140} preferredSize='30%'>
-      <LazyPane label='terminal'><Terminal /></LazyPane>
-    </Allotment.Pane>
+    <Allotment defaultSizes={[280, 660, 500]} proportionalLayout separator>
+      <Allotment.Pane minSize={240} maxSize={360} preferredSize={280}>
+        <LazyPane label='Explorer'><Sidebar /></LazyPane>
+      </Allotment.Pane>
+      <Allotment.Pane minSize={360} preferredSize='46%'>
+        {showTerminal ? (
+          <Allotment defaultSizes={[70, 30]} vertical proportionalLayout separator>
+            <Allotment.Pane minSize={280}>
+              <LazyPane label='editor'><Editor /></LazyPane>
+            </Allotment.Pane>
+            <Allotment.Pane minSize={140} preferredSize='30%'>
+              <LazyPane label='terminal'><Terminal /></LazyPane>
+            </Allotment.Pane>
+          </Allotment>
+        ) : (
+          <LazyPane label='editor'><Editor /></LazyPane>
+        )}
+      </Allotment.Pane>
+      <Allotment.Pane minSize={360} preferredSize='36%'>
+        <LazyPane label='preview'><PreviewPane /></LazyPane>
+      </Allotment.Pane>
+    </Allotment>
   );
 };
 
@@ -181,6 +180,7 @@ const SettingsBar = () => {
         <TopBarMenuPanel>
           <label>Theme<select value={settings.theme} onChange={(event) => setSettings((current) => ({ ...current, theme: event.target.value as typeof current.theme }))}>
             <option value='one-dark'>One Dark</option>
+            <option value='one-dark-pro'>One Dark Pro</option>
             <option value='vscode-dark'>VS Code Dark</option>
             <option value='high-contrast'>High Contrast</option>
           </select></label>
