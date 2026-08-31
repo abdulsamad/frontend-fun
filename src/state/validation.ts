@@ -16,6 +16,9 @@ export const getLanguageFromFilename = (name: string): string => {
 export const isValidFilename = (name: unknown): name is string =>
   typeof name === 'string' && FILENAME_PATTERN.test(name);
 
+export const isValidNewFilename = (name: unknown): name is string =>
+  isValidFilename(name) && !/\.html$/i.test(name);
+
 export const isValidFile = (file: unknown): file is ProjectFile => {
   if (!file || typeof file !== 'object') return false;
   const candidate = file as ProjectFile;

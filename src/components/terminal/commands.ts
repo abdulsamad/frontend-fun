@@ -6,7 +6,7 @@ const commandList = [
   'wrap <on|off>', 'font <size>', 'mic [stop]', 'record [seconds]', 'listen', 'speak <text>',
   'camera', 'location', 'notify <text>', 'share', 'online', 'clipboard',
   'clear', 'coffee', 'ascii', 'matrix', 'joke', 'intro', 'advice',
-  'touch <file>', 'rm <file>',
+  'touch <file.css|file.js>', 'rm <file>',
 ];
 
 type SpeechResultEvent = { results: ArrayLike<ArrayLike<{ transcript: string }>> };

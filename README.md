@@ -19,7 +19,7 @@ Frontend Fun is a browser-based playground for writing, previewing, and sharing 
 
 Files use names like `index.html`, `styles_v2.css`, or `app-1.js`. Paths, spaces, and unsupported extensions are rejected. The editor autosaves locally through IndexedDB and restores the last valid project after reload. Remote projects use an anonymous Project ID; opening one replaces the files currently in the workbench.
 
-Terminal shortcuts include `Ctrl+L`/`clear`, `Enter`, and backspace. Supported file commands are anchored as `touch filename.html` and `rm filename.html`. The preview runs in a sandboxed iframe, so preview code cannot access the editor DOM or local storage. Runtime errors are shown above the preview.
+Terminal shortcuts include `Ctrl+L`/`clear`, `Enter`, and backspace. New files can be created with `touch filename.css` or `touch filename.js`; HTML is kept as the single preview entry file. Existing files can be removed with `rm filename.html` (or another existing filename). The preview runs in a sandboxed iframe, so preview code cannot access the editor DOM or local storage. Runtime errors are shown above the preview.
 
 ## Architecture
 

@@ -13,7 +13,7 @@ import {
   replaceProjectFilesAtom,
   selectProjectFileAtom,
 } from '../../state/projectAtoms';
-import { getLanguageFromFilename, isValidFilename, validateDependencies, validateFiles } from '../../state/validation';
+import { getLanguageFromFilename, isValidNewFilename, validateDependencies, validateFiles } from '../../state/validation';
 import { FilesPayload, FilesResponse } from '../../shared/filesContract';
 import AddLanguageLogo from '../../utils/AddLanguageLogo';
 import Icon from '../Icon';
@@ -78,8 +78,8 @@ const Sidebar = () => {
   const createFile = (event: FormEvent) => {
     event.preventDefault();
     const filename = dialogValue.trim();
-    if (!isValidFilename(filename)) {
-      setDialogError('Use a valid .html, .css, or .js filename.');
+    if (!isValidNewFilename(filename)) {
+      setDialogError('New files must use a valid .css or .js filename.');
       return;
     }
     if (fileNames.some((name) => name.toLowerCase() === filename.toLowerCase())) {
@@ -222,7 +222,7 @@ const Sidebar = () => {
         {dialogState?.type === 'new-file' && (
           <form onSubmit={createFile}>
             <h2>New file</h2>
-            <label htmlFor='new-file-name'>File name<input id='new-file-name' name='fileName' autoFocus value={dialogValue} onChange={(event) => setDialogValue(event.target.value)} placeholder='component.html' /></label>
+            <label htmlFor='new-file-name'>File name<input id='new-file-name' name='fileName' autoFocus value={dialogValue} onChange={(event) => setDialogValue(event.target.value)} placeholder='component.js' /></label>
             {dialogError && <DialogError role='alert'>{dialogError}</DialogError>}
             <DialogActions><DialogButton type='button' onClick={closeDialog}>Cancel</DialogButton><DialogButton $primary type='submit'>Create file</DialogButton></DialogActions>
           </form>

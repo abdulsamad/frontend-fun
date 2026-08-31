@@ -6,7 +6,7 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import '@xterm/xterm/css/xterm.css';
 
 import { addProjectFileAtom, projectFileNamesAtom, projectFilesAtom, removeProjectFileAtom } from '../../state/projectAtoms';
-import { getLanguageFromFilename, isValidFilename } from '../../state/validation';
+import { getLanguageFromFilename, isValidNewFilename } from '../../state/validation';
 import Icon from '../Icon';
 import TerminalShell, { TerminalAction, TerminalHeader, TerminalViewport } from './Terminal';
 import commandOutputs from './commands';
@@ -61,7 +61,6 @@ const Terminal = () => {
           fitAddon.fit();
           if (!initialized && terminal.cols > 2) {
             initialized = true;
-            terminal.writeln('Type "help" to list supported commands. Ctrl+L clears the terminal.');
             terminal.write(`\r\n${terminalPrompt}`);
           }
         } catch { /* The pane may be hidden between responsive views. */ }
@@ -100,8 +99,8 @@ const Terminal = () => {
         const rmMatch = command.match(/^rm\s+([^\s]+)$/i);
         if (touchMatch) {
           const filename = touchMatch[1];
-          if (!isValidFilename(filename)) {
-            terminal.write(`\r\nError: use a valid .html, .css, or .js filename\r\n${terminalPrompt}`);
+          if (!isValidNewFilename(filename)) {
+            terminal.write(`\r\nError: new files must use a valid .css or .js filename\r\n${terminalPrompt}`);
           } else if (filesList.includes(filename)) {
             terminal.write(`\r\nError: a file with that name already exists\r\n${terminalPrompt}`);
           } else {
