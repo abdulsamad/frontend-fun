@@ -1,4 +1,4 @@
-import { KeyboardEvent, MouseEvent, useEffect, useRef, useState } from 'react';
+import { KeyboardEvent, MouseEvent, useEffect, useRef } from 'react';
 import MonacoEditor, { OnMount } from '@monaco-editor/react';
 import { emmetCSS, emmetHTML } from 'emmet-monaco-es';
 import { useAtomValue, useSetAtom } from 'jotai';
@@ -11,11 +11,12 @@ import {
   selectProjectFileAtom,
   updateActiveFileAtom,
 } from '../../state/projectAtoms';
+import { workbenchSettingsAtom } from '../../state/settings';
 import AddLanguageLogo from '../../utils/AddLanguageLogo';
 import Icon from '../Icon';
 import EditorGroup, { Breadcrumbs, EditorSurface, StatusBar, StatusGroup } from './Editor';
 import { ActionButton, CloseButton, EditorActions, EditorTabs, Tab, TabButton, TabList } from './Nav';
-import { customTheme } from './themes';
+import { customTheme, oneDarkTheme } from './themes';
 
 const Editor = () => {
   const activeFile = useAtomValue(activeFileAtom);
@@ -24,7 +25,8 @@ const Editor = () => {
   const selectFile = useSetAtom(selectProjectFileAtom);
   const closeFile = useSetAtom(closeProjectFileAtom);
   const updateActiveFile = useSetAtom(updateActiveFileAtom);
-  const [wrap, setWrap] = useState(false);
+  const settings = useAtomValue(workbenchSettingsAtom);
+  const setSettings = useSetAtom(workbenchSettingsAtom);
   const [cursor, setCursor] = useState({ lineNumber: 1, column: 1 });
   const cursorSubscription = useRef<{ dispose: () => void } | null>(null);
 
@@ -97,7 +99,7 @@ const Editor = () => {
           })}
         </TabList>
         <EditorActions>
-          <ActionButton type='button' $active={wrap} aria-pressed={wrap} aria-label='Toggle word wrap' title={`Word wrap: ${wrap ? 'on' : 'off'}`} onClick={() => setWrap((current) => !current)}>
+          <ActionButton type='button' $active={settings.wordWrap} aria-pressed={settings.wordWrap} aria-label='Toggle word wrap' title={`Word wrap: ${settings.wordWrap ? 'on' : 'off'}`} onClick={() => setSettings((current) => ({ ...current, wordWrap: !current.wordWrap }))}>
             <Icon name='word-wrap' />
           </ActionButton>
         </EditorActions>
@@ -105,22 +107,25 @@ const Editor = () => {
       <Breadcrumbs aria-label='File location'><span>frontend-fun</span><span>{activeFile.name}</span></Breadcrumbs>
       <EditorSurface>
         <MonacoEditor
-          theme='frontend-fun-dark'
+          theme={settings.theme === 'one-dark' ? 'frontend-fun-one-dark' : 'frontend-fun-dark'}
           language={activeFile.language}
           value={activeFile.value}
           path={activeFile.name}
           onChange={(value) => updateActiveFile(value ?? '')}
           onMount={handleEditorMount}
-          beforeMount={(monaco) => monaco.editor.defineTheme('frontend-fun-dark', customTheme)}
+          beforeMount={(monaco) => {
+            monaco.editor.defineTheme('frontend-fun-dark', customTheme);
+            monaco.editor.defineTheme('frontend-fun-one-dark', oneDarkTheme);
+          }}
           options={{
             automaticLayout: true,
             minimap: { enabled: false },
-            fontSize: 14,
+            fontSize: settings.fontSize,
             lineHeight: 22,
             fontFamily: "'Fira Code', 'SFMono-Regular', Consolas, monospace",
             fontLigatures: true,
             formatOnPaste: true,
-            wordWrap: wrap ? 'on' : 'off',
+            wordWrap: settings.wordWrap ? 'on' : 'off',
             smoothScrolling: true,
             scrollBeyondLastLine: false,
             padding: { top: 8 },
@@ -130,7 +135,7 @@ const Editor = () => {
       </EditorSurface>
       <StatusBar>
         <StatusGroup><span>Live preview</span><span>{activeFile.language}</span></StatusGroup>
-        <StatusGroup><span>Ln {cursor.lineNumber}, Col {cursor.column}</span><span>Spaces: 2</span><span>Wrap {wrap ? 'On' : 'Off'}</span></StatusGroup>
+        <StatusGroup><span>Ln {cursor.lineNumber}, Col {cursor.column}</span><span>Spaces: 2</span><span>Wrap {settings.wordWrap ? 'On' : 'Off'}</span></StatusGroup>
       </StatusBar>
     </EditorGroup>
   );

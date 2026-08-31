@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 const GlobalContainer = styled.main`
-  block-size: 100dvh;
+  block-size: 100%;
   inline-size: 100dvw;
   min-inline-size: 0;
   overflow: hidden;
@@ -12,6 +12,74 @@ const GlobalContainer = styled.main`
     min-inline-size: 0;
     min-block-size: 0;
   }
+`;
+
+export const WorkbenchFrame = styled.div`
+  display: grid;
+  grid-template-rows: 36px minmax(0, 1fr);
+  block-size: 100dvh;
+  inline-size: 100dvw;
+  min-inline-size: 0;
+  overflow: hidden;
+  background: var(--workbench-canvas);
+`;
+
+export const WorkbenchTopBar = styled.header`
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-inline: 8px;
+  border-block-end: 1px solid var(--workbench-border);
+  background: var(--workbench-elevated);
+`;
+
+export const TopBarBrand = styled.span`
+  margin-inline-end: 8px;
+  color: var(--workbench-text);
+  font-size: 0.75rem;
+  font-weight: 600;
+`;
+
+export const TopBarMenu = styled.details`
+  position: relative;
+
+  summary {
+    padding: 5px 8px;
+    border-radius: 3px;
+    color: var(--workbench-muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker { display: none; }
+  summary:hover { background: var(--workbench-hover); color: var(--workbench-text); }
+`;
+
+export const TopBarMenuPanel = styled.div`
+  position: absolute;
+  z-index: 10;
+  inset-block-start: 31px;
+  inset-inline-start: 0;
+  display: grid;
+  gap: 10px;
+  inline-size: 220px;
+  padding: 12px;
+  border: 1px solid var(--workbench-border);
+  border-radius: 4px;
+  background: var(--workbench-elevated);
+  box-shadow: 0 12px 28px rgb(0 0 0 / 35%);
+
+  label {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 10px;
+    color: var(--workbench-text);
+    font-size: 0.75rem;
+  }
+
+  select { max-inline-size: 120px; }
 `;
 
 export const CompactWorkbench = styled.div`

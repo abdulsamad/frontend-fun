@@ -26,6 +26,34 @@ const GlobalStyle = createGlobalStyle`
     --font-code: 'Fira Code', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
   }
 
+  [data-theme='one-dark'] {
+    --workbench-canvas: #21252b;
+    --workbench-editor: #282c34;
+    --workbench-elevated: #21252b;
+    --workbench-hover: #323842;
+    --workbench-selected: #3e4451;
+    --workbench-border: #181a1f;
+    --workbench-text: #abb2bf;
+    --workbench-muted: #7f848e;
+    --workbench-focus: #61afef;
+    --workbench-danger: #e06c75;
+    --workbench-success: #98c379;
+  }
+
+  [data-theme='high-contrast'] {
+    --workbench-canvas: #000;
+    --workbench-editor: #050505;
+    --workbench-elevated: #111;
+    --workbench-hover: #333;
+    --workbench-selected: #444;
+    --workbench-border: #777;
+    --workbench-text: #fff;
+    --workbench-muted: #ddd;
+    --workbench-focus: #fff;
+    --workbench-danger: #ff8080;
+    --workbench-success: #7fff7f;
+  }
+
   html,
   body,
   #root {

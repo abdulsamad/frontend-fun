@@ -37,6 +37,37 @@ export const customTheme: ITheme = {
   },
 };
 
+export const oneDarkTheme: ITheme = {
+  base: 'vs-dark',
+  inherit: true,
+  rules: [
+    { token: 'comment', foreground: '5C6370', fontStyle: 'italic' },
+    { token: 'string', foreground: '98C379' },
+    { token: 'keyword', foreground: 'C678DD' },
+    { token: 'number', foreground: 'D19A66' },
+    { token: 'type', foreground: 'E5C07B' },
+    { token: 'function', foreground: '61AFEF' },
+    { token: 'variable', foreground: 'E06C75' },
+  ],
+  colors: {
+    'editor.background': '#282C34',
+    'editor.foreground': '#ABB2BF',
+    'editor.lineHighlightBackground': '#2C313C',
+    'editor.selectionBackground': '#3E4451',
+    'editorCursor.foreground': '#528BFF',
+    'editorGroup.background': '#21252B',
+    'editorGroupHeader.tabsBackground': '#21252B',
+    'editorLineNumber.foreground': '#4B5263',
+    'editorLineNumber.activeForeground': '#ABB2BF',
+    'editorIndentGuide.background1': '#3B4048',
+    'editorIndentGuide.activeBackground1': '#5C6370',
+    'editorWidget.background': '#21252B',
+    'editorWidget.border': '#181A1F',
+    'editorSuggestWidget.background': '#21252B',
+    'editorSuggestWidget.selectedBackground': '#3E4451',
+  },
+};
+
 export const cobalt: ITheme = {
   base: 'vs-dark',
   inherit: true,

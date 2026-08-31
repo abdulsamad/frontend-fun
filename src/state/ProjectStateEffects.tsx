@@ -3,12 +3,14 @@ import { useAtomValue, useSetAtom } from 'jotai';
 import localforage from 'localforage';
 
 import { projectFilesAtom, projectHydratedAtom, replaceProjectFilesAtom } from './projectAtoms';
+import { workbenchSettingsAtom } from './settings';
 
 const ProjectStateEffects = () => {
   const files = useAtomValue(projectFilesAtom);
   const hydrated = useAtomValue(projectHydratedAtom);
   const replaceFiles = useSetAtom(replaceProjectFilesAtom);
   const setHydrated = useSetAtom(projectHydratedAtom);
+  const autoSave = useAtomValue(workbenchSettingsAtom).autoSave;
 
   useEffect(() => {
     let active = true;
@@ -24,9 +26,9 @@ const ProjectStateEffects = () => {
   }, [replaceFiles, setHydrated]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || !autoSave) return;
     localforage.setItem('filesData', files).catch(() => undefined);
-  }, [files, hydrated]);
+  }, [files, hydrated, autoSave]);
 
   return null;
 };
