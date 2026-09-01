@@ -28,9 +28,9 @@ const Terminal = () => {
   const resetTerminal = () => {
     const terminal = xTermRef.current;
     if (!terminal) return;
-    terminal.clear();
+    terminal.reset();
     terminalTextRef.current = '';
-    terminal.write(`\r${terminalPrompt}`);
+    terminal.write(terminalPrompt);
   };
 
   useEffect(() => {
