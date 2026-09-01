@@ -95,6 +95,11 @@ const Terminal = () => {
       const rmMatch = command.match(/^rm\s+([^\s]+)$/i);
       terminalTextRef.current = '';
 
+      if (command.toLowerCase() === 'clear' || command.toLowerCase() === 'cls') {
+        resetTerminal();
+        return;
+      }
+
       if (touchMatch) {
         const filename = touchMatch[1];
         if (!isValidNewFilename(filename)) {
@@ -133,11 +138,6 @@ const Terminal = () => {
     for (let index = 0; index < data.length; index += 1) {
       const input = data[index];
       const code = input.charCodeAt(0);
-
-      if (terminalTextRef.current === 'clear' || terminalTextRef.current === 'cls') {
-        resetTerminal();
-        return;
-      }
 
       // Avoid executing twice when a pasted/mobile line ending arrives as CRLF.
       if (code === 10 && data[index - 1] === '\r') continue;
