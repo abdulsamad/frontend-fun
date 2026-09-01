@@ -73,6 +73,20 @@ const useCompactLayout = () => {
   return compact;
 };
 
+const useMobileLayout = () => {
+  const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
+
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 768px)');
+    const update = (event: MediaQueryListEvent) => setMobile(event.matches);
+    setMobile(query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+
+  return mobile;
+};
+
 const LazyPane = ({ label, children }: { label: string; children: ReactNode }) => (
   <Suspense fallback={<PaneLoading role='status'>Loading {label}…</PaneLoading>}>
     {children}
@@ -108,8 +122,14 @@ const DesktopWorkbench = () => {
 };
 
 const NarrowWorkbench = () => {
+  const mobile = useMobileLayout();
   const [activeView, setActiveView] = useState<CompactView>('code');
   const [visitedViews, setVisitedViews] = useState<CompactView[]>(['code']);
+  const availableViews = mobile ? compactViews.filter((view) => view.id !== 'terminal') : compactViews;
+
+  useEffect(() => {
+    if (mobile && activeView === 'terminal') setActiveView('code');
+  }, [activeView, mobile]);
 
   const activateView = (view: CompactView) => {
     setActiveView(view);
@@ -117,8 +137,8 @@ const NarrowWorkbench = () => {
   };
 
   const selectView = (index: number) => {
-    const normalizedIndex = (index + compactViews.length) % compactViews.length;
-    const nextView = compactViews[normalizedIndex];
+    const normalizedIndex = (index + availableViews.length) % availableViews.length;
+    const nextView = availableViews[normalizedIndex];
     activateView(nextView.id);
     requestAnimationFrame(() => document.getElementById(`view-tab-${nextView.id}`)?.focus());
   };
@@ -135,7 +155,7 @@ const NarrowWorkbench = () => {
   return (
     <CompactWorkbench>
       <CompactViewTabs aria-label='Workbench views' role='tablist'>
-        {compactViews.map((view, index) => (
+        {availableViews.map((view, index) => (
           <CompactViewButton
             key={view.id}
             id={`view-tab-${view.id}`}
@@ -161,9 +181,11 @@ const NarrowWorkbench = () => {
         <CompactSurface id='view-panel-preview' role='tabpanel' aria-labelledby='view-tab-preview' $active={activeView === 'preview'}>
           {visitedViews.includes('preview') && <LazyPane label='preview'><PreviewPane /></LazyPane>}
         </CompactSurface>
-        <CompactSurface id='view-panel-terminal' role='tabpanel' aria-labelledby='view-tab-terminal' $active={activeView === 'terminal'}>
-          {visitedViews.includes('terminal') && <LazyPane label='terminal'><Terminal /></LazyPane>}
-        </CompactSurface>
+        {!mobile && (
+          <CompactSurface id='view-panel-terminal' role='tabpanel' aria-labelledby='view-tab-terminal' $active={activeView === 'terminal'}>
+            {visitedViews.includes('terminal') && <LazyPane label='terminal'><Terminal /></LazyPane>}
+          </CompactSurface>
+        )}
       </CompactStage>
     </CompactWorkbench>
   );
