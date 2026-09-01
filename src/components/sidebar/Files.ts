@@ -81,7 +81,7 @@ export const FileRow = styled.li<{ $active?: boolean }>`
     background: ${({ $active }) => ($active ? 'var(--workbench-selected)' : 'var(--workbench-hover)')};
   }
 
-  &:not(:hover):not(:focus-within) > button:last-child {
+  &:not(:hover):not(:focus-within) > button[aria-label^='Delete'] {
     opacity: 0;
   }
 `;
