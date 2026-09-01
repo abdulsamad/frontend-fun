@@ -28,9 +28,13 @@ const Terminal = () => {
   const resetTerminal = () => {
     const terminal = xTermRef.current;
     if (!terminal) return;
-    terminal.clear();
     terminalTextRef.current = '';
-    terminal.write(`\r${terminalPrompt}`);
+    // xterm writes are asynchronous. Queue the clear after any pending input
+    // echo so the typed command cannot be rendered after the screen is cleared.
+    terminal.write('\r', () => {
+      terminal.clear();
+      terminal.write(terminalPrompt);
+    });
   };
 
   useEffect(() => {
