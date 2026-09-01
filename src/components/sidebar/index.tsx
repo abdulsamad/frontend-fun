@@ -210,9 +210,11 @@ const Sidebar = () => {
                 <AddLanguageLogo fileName={file.name} />
                 <span>{file.name}</span>
               </FileButton>
-              <DeleteButton type='button' aria-label={`Delete ${file.name}`} title={`Delete ${file.name}`} onClick={() => openDialog({ type: 'delete-file', filename: file.name })}>
-                <Icon name='delete' size={14} />
-              </DeleteButton>
+              {!/\.html$/i.test(file.name) && (
+                <DeleteButton type='button' aria-label={`Delete ${file.name}`} title={`Delete ${file.name}`} onClick={() => openDialog({ type: 'delete-file', filename: file.name })}>
+                  <Icon name='delete' size={14} />
+                </DeleteButton>
+              )}
             </FileRow>
           ))}
         </FileList>

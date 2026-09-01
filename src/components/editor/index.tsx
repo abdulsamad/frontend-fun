@@ -86,14 +86,16 @@ const Editor = () => {
                   <AddLanguageLogo fileName={file.name} />
                   <span>{file.name}</span>
                 </TabButton>
-                <CloseButton
-                  type='button'
-                  disabled={openFiles.length <= 1}
-                  aria-label={`Close ${file.name}`}
-                  title={openFiles.length <= 1 ? 'Keep one file open' : `Close ${file.name}`}
-                  onClick={(event) => handleCloseFile(event, file.name)}>
-                  <Icon name='close' size={13} />
-                </CloseButton>
+                {!/\.html$/i.test(file.name) && (
+                  <CloseButton
+                    type='button'
+                    disabled={openFiles.length <= 1}
+                    aria-label={`Close ${file.name}`}
+                    title={openFiles.length <= 1 ? 'Keep one file open' : `Close ${file.name}`}
+                    onClick={(event) => handleCloseFile(event, file.name)}>
+                    <Icon name='close' size={13} />
+                  </CloseButton>
+                )}
               </Tab>
             );
           })}

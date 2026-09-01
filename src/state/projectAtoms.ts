@@ -50,6 +50,7 @@ export const addProjectFileAtom = atom(null, (get, set, file: ProjectFile) => {
 });
 
 export const removeProjectFileAtom = atom(null, (get, set, filename: string) => {
+  if (/\.html$/i.test(filename)) return;
   const files = get(projectFilesAtom);
   const remainingFiles = files.filter(({ name }) => name !== filename);
   if (remainingFiles.length === 0 || remainingFiles.length === files.length) return;
@@ -68,6 +69,7 @@ export const removeProjectFileAtom = atom(null, (get, set, filename: string) => 
 });
 
 export const closeProjectFileAtom = atom(null, (get, set, filename: string) => {
+  if (/\.html$/i.test(filename)) return;
   const openFiles = get(openFileNamesAtom);
   if (openFiles.length <= 1) return;
   const closedIndex = openFiles.indexOf(filename);
