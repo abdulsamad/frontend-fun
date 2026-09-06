@@ -1,6 +1,6 @@
 import { Env, isProjectId, projectKey, respond } from './_shared';
 import { validateDependencies, validateFiles } from '../../src/state/validation';
-import { FilesPayload } from '../../src/shared/filesContract';
+import { FilesPayload, MAX_PROJECT_SIZE } from '../../src/shared/filesContract';
 
 export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (request.method !== 'GET') return respond(405, { err: 'Only GET requests allowed.' });
@@ -8,6 +8,13 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
   if (!id) return respond(400, { err: 'ID is required.' });
   if (!isProjectId(id)) return respond(400, { err: 'Invalid ID.' });
   try {
+    // Check metadata before downloading an object. This protects the worker
+    // if an oversized or externally-created object ever reaches the bucket.
+    const metadata = await env.PROJECTS.head(projectKey(id));
+    if (!metadata) return respond(404, { err: 'Saved project not found.' });
+    if (metadata.size > MAX_PROJECT_SIZE) {
+      return respond(422, { err: 'Saved project exceeds the remote size limit.' });
+    }
     const savedData = await env.PROJECTS.get(projectKey(id));
     if (!savedData) return respond(404, { err: 'Saved project not found.' });
     const payload = await savedData.json() as FilesPayload;

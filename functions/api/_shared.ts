@@ -1,12 +1,13 @@
 import { validateDependencies, validateFiles } from '../../src/state/validation';
-import { FilesPayload } from '../../src/shared/filesContract';
+import { FilesPayload, MAX_PROJECT_SIZE } from '../../src/shared/filesContract';
 
 export interface Env {
   PROJECTS: R2Bucket;
 }
 
-export const MAX_PROJECT_SIZE = 5 * 1024 * 1024;
-const MAX_REQUEST_SIZE = MAX_PROJECT_SIZE + 1024;
+// JSON adds file names, languages, dependency metadata, and structural
+// characters around the serialized project. Keep that overhead bounded too.
+const MAX_REQUEST_SIZE = MAX_PROJECT_SIZE + 256 * 1024;
 const PROJECT_ID_PATTERN = /^[a-f0-9]{32}$/i;
 
 export const respond = (status: number, body: object) => new Response(JSON.stringify(body), {
@@ -23,14 +24,47 @@ export const projectKey = (id: string) => `frontend-fun/projects/${id}.json`;
 export const projectId = () => crypto.randomUUID().replaceAll('-', '');
 export const isProjectId = (id: string) => PROJECT_ID_PATTERN.test(id);
 
+const readRequestBody = async (request: Request): Promise<string | Response> => {
+  if (!request.body) return respond(400, { err: 'Request body is required.' });
+
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalSize = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      totalSize += value.byteLength;
+      if (totalSize > MAX_REQUEST_SIZE) {
+        await reader.cancel();
+        return respond(413, { err: 'Project request is too large.' });
+      }
+      chunks.push(value);
+    }
+  } catch {
+    return respond(400, { err: 'Could not read request body.' });
+  }
+
+  const bytes = new Uint8Array(totalSize);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
+};
+
 export const parseFilesPayload = async (request: Request) => {
   const contentLength = Number(request.headers.get('Content-Length'));
   if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_SIZE) {
     return { error: respond(413, { err: 'Project is larger than the 5 MiB remote save limit.' }) };
   }
+  const requestBody = await readRequestBody(request);
+  if (requestBody instanceof Response) return { error: requestBody };
+
   let body: FilesPayload;
   try {
-    body = await request.json() as FilesPayload;
+    body = JSON.parse(requestBody) as FilesPayload;
   } catch {
     return { error: respond(400, { err: 'Malformed JSON.' }) };
   }

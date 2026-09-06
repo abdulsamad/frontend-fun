@@ -14,7 +14,7 @@ import {
   selectProjectFileAtom,
 } from '../../state/projectAtoms';
 import { getLanguageFromFilename, isValidNewFilename, validateDependencies, validateFiles } from '../../state/validation';
-import { FilesPayload, FilesResponse } from '../../shared/filesContract';
+import { FilesPayload, FilesResponse, MAX_PROJECT_SIZE } from '../../shared/filesContract';
 import AddLanguageLogo from '../../utils/AddLanguageLogo';
 import Icon from '../Icon';
 import SidebarShell, { ExplorerPane } from './Sidebar';
@@ -115,6 +115,12 @@ const Sidebar = () => {
     const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
     const filesData = store.get(projectFilesAtom);
     const dependencies = store.get(projectDependenciesAtom);
+    const serialized = JSON.stringify({ filesData, dependencies } satisfies FilesPayload);
+    if (new TextEncoder().encode(serialized).byteLength > MAX_PROJECT_SIZE) {
+      toast.error('This project is larger than the 5 MiB remote save limit.');
+      setIsSaving(false);
+      return;
+    }
 
     try {
       if (id && !version) {
@@ -133,7 +139,7 @@ const Sidebar = () => {
       const response = await fetch(id ? `/api/saveFilesData?id=${encodeURIComponent(id)}` : '/api/saveFilesData', {
         method: 'POST',
         headers: saveHeaders,
-        body: JSON.stringify({ filesData, dependencies } satisfies FilesPayload),
+        body: serialized,
       });
       const data = await response.json() as FilesResponse;
       if (!response.ok || !data.id || !data.version) {
