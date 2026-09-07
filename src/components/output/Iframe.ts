@@ -21,11 +21,11 @@ export const PreviewFrame = styled.iframe<{ $deviceWidth?: number }>`
   box-shadow: ${({ $deviceWidth }) => ($deviceWidth ? '0 8px 24px rgba(0, 0, 0, 0.28)' : 'none')};
 `;
 
-export const DevtoolsPanel = styled.section`
+export const DevtoolsPanel = styled.section<{ $collapsed: boolean }>`
   display: flex;
-  flex: 0 0 min(32%, 190px);
+  flex: ${({ $collapsed }) => ($collapsed ? '0 0 34px' : '0 0 min(32%, 190px)')};
   flex-direction: column;
-  min-block-size: 118px;
+  min-block-size: ${({ $collapsed }) => ($collapsed ? '34px' : '118px')};
   border-block-start: 1px solid var(--workbench-border);
   background: var(--workbench-editor);
   color: var(--workbench-text);
@@ -37,6 +37,8 @@ export const DevtoolsHeader = styled.header`
   justify-content: space-between;
   min-block-size: 34px;
   border-block-end: 1px solid var(--workbench-border);
+
+  > span { display: flex; align-items: stretch; }
 `;
 
 export const DevtoolsTabs = styled.div`
@@ -79,6 +81,23 @@ export const DevtoolsClear = styled.button`
   &:hover { background: var(--workbench-hover); color: var(--workbench-text); }
 `;
 
+export const DevtoolsToggle = styled.button<{ $collapsed: boolean }>`
+  display: grid;
+  place-items: center;
+  inline-size: 28px;
+  margin: 3px 6px 3px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--workbench-muted);
+  cursor: pointer;
+
+  svg { transform: rotate(${({ $collapsed }) => ($collapsed ? '180deg' : '0deg')}); }
+  &:hover { background: var(--workbench-hover); color: var(--workbench-text); }
+  &:focus-visible { outline: 1px solid var(--workbench-focus); outline-offset: -2px; }
+`;
+
 export const DevtoolsContent = styled.div`
   flex: 1;
   min-block-size: 0;
@@ -105,7 +124,38 @@ export const ConsoleRow = styled.li<{ $level: 'log' | 'info' | 'warn' | 'error' 
   color: ${({ $level }) => ($level === 'error' ? '#f48771' : $level === 'warn' ? '#cca700' : 'var(--workbench-text)')};
 
   time { color: var(--workbench-muted); }
-  span { white-space: pre-wrap; overflow-wrap: anywhere; }
+  > span { white-space: pre-wrap; overflow-wrap: anywhere; }
+`;
+
+export const ConsoleValues = styled.span`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 4px 7px;
+  min-inline-size: 0;
+`;
+
+export const ConsoleJson = styled.details`
+  max-inline-size: 100%;
+
+  summary {
+    color: #9cdcfe;
+    cursor: pointer;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  pre {
+    max-inline-size: 100%;
+    margin: 5px 0 2px;
+    padding: 7px 9px;
+    overflow: auto;
+    border-inline-start: 2px solid var(--workbench-border);
+    color: var(--workbench-text);
+    font: inherit;
+    line-height: 1.45;
+    white-space: pre;
+  }
 `;
 
 export const NetworkRow = styled.li`

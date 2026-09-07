@@ -7,6 +7,7 @@ import {
   createPreviewShell,
   PreviewBundle,
   PreviewConsoleEntry,
+  PreviewConsoleValue,
   PreviewError,
   PreviewFrameMessage,
   PreviewHostMessage,
@@ -17,6 +18,8 @@ import Icon from '../Icon';
 import PreviewPane from './Output';
 import {
   ConsoleRow,
+  ConsoleJson,
+  ConsoleValues,
   DevtoolsClear,
   DevtoolsContent,
   DevtoolsEmpty,
@@ -24,6 +27,7 @@ import {
   DevtoolsPanel,
   DevtoolsTab,
   DevtoolsTabs,
+  DevtoolsToggle,
   ErrorRow,
   NetworkRow,
   PreviewErrorBanner,
@@ -55,6 +59,29 @@ const previewDevices: Array<{ id: PreviewDevice; label: string; icon: 'desktop' 
   { id: 'mobile', label: 'Mobile preview - 375 px', icon: 'mobile', width: 375 },
 ];
 
+const appendDiagnostic = (current: PreviewError[], diagnostic: PreviewError) => {
+  const previous = current.at(-1);
+  if (previous && previous.category === diagnostic.category && previous.message === diagnostic.message && previous.source === diagnostic.source) {
+    return current;
+  }
+  return [...current, diagnostic].slice(-MAX_ERROR_ENTRIES);
+};
+
+const ConsoleValue = ({ type, value }: PreviewConsoleValue) => {
+  if (type !== 'json') return <span>{value}</span>;
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    const summary = Array.isArray(parsed)
+      ? `Array(${parsed.length})`
+      : parsed && typeof parsed === 'object'
+        ? `Object {${Object.keys(parsed).length}}`
+        : String(parsed);
+    return <ConsoleJson><summary>{summary}</summary><pre>{JSON.stringify(parsed, null, 2)}</pre></ConsoleJson>;
+  } catch {
+    return <span>{value}</span>;
+  }
+};
+
 const useDebouncedBundle = (bundle: PreviewBundle) => {
   const [debounced, setDebounced] = useState(bundle);
   useEffect(() => {
@@ -75,6 +102,7 @@ const Preview = () => {
   const [consoleEntries, setConsoleEntries] = useState<PreviewConsoleEntry[]>([]);
   const [networkEntries, setNetworkEntries] = useState<PreviewNetworkEntry[]>([]);
   const [activeDevtoolsView, setActiveDevtoolsView] = useState<DevtoolsView>('console');
+  const [isDevtoolsCollapsed, setIsDevtoolsCollapsed] = useState(false);
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [messageListenerReady, setMessageListenerReady] = useState(false);
@@ -152,7 +180,13 @@ const Preview = () => {
         if (!hasPreviewError.current) setStatus('ready');
       } else if (event.data.type === 'preview:console') {
         if (event.data.renderId !== renderId.current) return;
-        const entry = { level: event.data.level, message: event.data.message, timestamp: event.data.timestamp } satisfies PreviewConsoleEntry;
+        const values = Array.isArray(event.data.values)
+          ? event.data.values
+            .filter((value) => (value?.type === 'text' || value?.type === 'json') && typeof value.value === 'string')
+            .slice(0, 20)
+            .map((value) => ({ type: value.type, value: value.value.slice(0, 8000) }))
+          : [];
+        const entry = { level: event.data.level, values, timestamp: event.data.timestamp } satisfies PreviewConsoleEntry;
         setConsoleEntries((current) => [...current, entry].slice(-MAX_CONSOLE_ENTRIES));
       } else if (event.data.type === 'preview:network') {
         if (event.data.renderId !== renderId.current) return;
@@ -175,12 +209,14 @@ const Preview = () => {
           return next.slice(-MAX_NETWORK_ENTRIES);
         });
       } else if (event.data.type === 'preview:error') {
-        hasPreviewError.current = true;
         if (event.data.renderId !== renderId.current) return;
-        const diagnostic = { category: event.data.category, message: event.data.message, source: event.data.source, line: event.data.line, column: event.data.column } satisfies PreviewError;
-        setDiagnostics((current) => [...current, diagnostic].slice(-MAX_ERROR_ENTRIES));
-        setPreviewError(diagnostic);
-        setStatus('error');
+        const diagnostic = { category: event.data.category, message: event.data.message, source: event.data.source, line: event.data.line, column: event.data.column, recoverable: event.data.recoverable } satisfies PreviewError;
+        setDiagnostics((current) => appendDiagnostic(current, diagnostic));
+        if (!diagnostic.recoverable) {
+          hasPreviewError.current = true;
+          setPreviewError(diagnostic);
+          setStatus('error');
+        }
       }
     };
     window.addEventListener('message', handleMessage);
@@ -274,7 +310,7 @@ const Preview = () => {
           />
         )}
       </PreviewViewport>
-      <DevtoolsPanel aria-label='Preview developer tools'>
+      <DevtoolsPanel $collapsed={isDevtoolsCollapsed} aria-label='Preview developer tools'>
         <DevtoolsHeader>
           <DevtoolsTabs role='tablist' aria-label='Preview logs'>
             {(['console', 'network', 'errors'] as DevtoolsView[]).map((view) => (
@@ -286,14 +322,31 @@ const Preview = () => {
                 aria-controls={`devtools-panel-${view}`}
                 aria-selected={activeDevtoolsView === view}
                 $active={activeDevtoolsView === view}
-                onClick={() => setActiveDevtoolsView(view)}>
+                onClick={() => {
+                  if (activeDevtoolsView === view && !isDevtoolsCollapsed) setIsDevtoolsCollapsed(true);
+                  else {
+                    setActiveDevtoolsView(view);
+                    setIsDevtoolsCollapsed(false);
+                  }
+                }}>
                 {view[0].toUpperCase() + view.slice(1)} {viewCounts[view] > 0 && `(${viewCounts[view]})`}
               </DevtoolsTab>
             ))}
           </DevtoolsTabs>
-          <DevtoolsClear type='button' onClick={clearActiveView}>Clear</DevtoolsClear>
+          <span>
+            {!isDevtoolsCollapsed && <DevtoolsClear type='button' onClick={clearActiveView}>Clear</DevtoolsClear>}
+            <DevtoolsToggle
+              type='button'
+              $collapsed={isDevtoolsCollapsed}
+              aria-expanded={!isDevtoolsCollapsed}
+              aria-label={isDevtoolsCollapsed ? 'Expand preview console' : 'Collapse preview console'}
+              title={isDevtoolsCollapsed ? 'Expand logs' : 'Collapse logs'}
+              onClick={() => setIsDevtoolsCollapsed((collapsed) => !collapsed)}>
+              <Icon name='chevron-down' size={16} />
+            </DevtoolsToggle>
+          </span>
         </DevtoolsHeader>
-        <DevtoolsContent
+        {!isDevtoolsCollapsed && <DevtoolsContent
           id={`devtools-panel-${activeDevtoolsView}`}
           role='tabpanel'
           aria-labelledby={`devtools-tab-${activeDevtoolsView}`}>
@@ -301,7 +354,7 @@ const Preview = () => {
             <ul>{consoleEntries.map((entry, index) => (
               <ConsoleRow key={`${entry.timestamp}-${index}`} $level={entry.level}>
                 <time>{new Date(entry.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}</time>
-                <span>{entry.message}</span>
+                <ConsoleValues>{entry.values.map((value, valueIndex) => <ConsoleValue key={valueIndex} {...value} />)}</ConsoleValues>
               </ConsoleRow>
             ))}</ul>
           ) : <DevtoolsEmpty>Console output will appear here.</DevtoolsEmpty>)}
@@ -323,7 +376,7 @@ const Preview = () => {
               </ErrorRow>
             ))}</ul>
           ) : <DevtoolsEmpty>Runtime, syntax, network, and security errors will appear here.</DevtoolsEmpty>)}
-        </DevtoolsContent>
+        </DevtoolsContent>}
       </DevtoolsPanel>
     </PreviewPane>
   );

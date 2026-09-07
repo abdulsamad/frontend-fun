@@ -15,13 +15,19 @@ export interface PreviewError {
   source?: string;
   line?: number;
   column?: number;
+  recoverable?: boolean;
 }
 
 export type PreviewConsoleLevel = 'log' | 'info' | 'warn' | 'error' | 'debug';
 
+export interface PreviewConsoleValue {
+  type: 'text' | 'json';
+  value: string;
+}
+
 export interface PreviewConsoleEntry {
   level: PreviewConsoleLevel;
-  message: string;
+  values: PreviewConsoleValue[];
   timestamp: number;
 }
 
@@ -93,25 +99,46 @@ export const createPreviewShell = (channelId: string, dependencyOrigins: string[
         let activeRenderId = 0;
         let networkSequence = 0;
         const nextNetworkId = () => String(++networkSequence);
+        const jsonReplacer = (() => {
+          const seen = new WeakSet();
+          return (_key, nestedValue) => {
+            if (typeof nestedValue === 'bigint') return String(nestedValue) + 'n';
+            if (typeof nestedValue === 'undefined') return '[undefined]';
+            if (typeof nestedValue === 'function') return '[Function ' + (nestedValue.name || 'anonymous') + ']';
+            if (typeof nestedValue === 'symbol') return String(nestedValue);
+            if (nestedValue instanceof Error) return { name: nestedValue.name, message: nestedValue.message, stack: nestedValue.stack };
+            if (nestedValue instanceof Map) return Object.fromEntries(nestedValue);
+            if (nestedValue instanceof Set) return Array.from(nestedValue);
+            if (typeof nestedValue === 'object' && nestedValue !== null) {
+              if (seen.has(nestedValue)) return '[Circular]';
+              seen.add(nestedValue);
+            }
+            return nestedValue;
+          };
+        });
+        const serializeJson = (value) => JSON.stringify(value, jsonReplacer());
         const safeSerialize = (value) => {
-          if (typeof value === 'string') return value;
-          if (value instanceof Error) return value.stack || value.name + ': ' + value.message;
-          if (value === undefined) return 'undefined';
-          if (typeof value === 'function') return '[Function ' + (value.name || 'anonymous') + ']';
-          if (typeof value === 'symbol') return String(value);
-          try {
-            const seen = new WeakSet();
-            const serialized = JSON.stringify(value, (_key, nestedValue) => {
-              if (typeof nestedValue === 'bigint') return String(nestedValue) + 'n';
-              if (typeof nestedValue === 'object' && nestedValue !== null) {
-                if (seen.has(nestedValue)) return '[Circular]';
-                seen.add(nestedValue);
+          if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+              try {
+                return { type: 'json', value: serializeJson(JSON.parse(trimmed)).slice(0, 8000) };
+              } catch {
+                // Keep malformed JSON as text so the console never hides the original value.
               }
-              return nestedValue;
-            });
-            return serialized === undefined ? String(value) : serialized;
+            }
+            return { type: 'text', value: value.slice(0, 8000) };
+          }
+          if (value instanceof Error) return { type: 'text', value: (value.stack || value.name + ': ' + value.message).slice(0, 8000) };
+          if (value === undefined) return { type: 'text', value: 'undefined' };
+          if (typeof value === 'function') return { type: 'text', value: '[Function ' + (value.name || 'anonymous') + ']' };
+          if (typeof value === 'symbol') return { type: 'text', value: String(value) };
+          if (typeof value !== 'object' || value === null) return { type: 'text', value: String(value) };
+          try {
+            const serialized = serializeJson(value);
+            return { type: 'json', value: (serialized === undefined ? String(value) : serialized).slice(0, 8000) };
           } catch {
-            return String(value);
+            return { type: 'text', value: String(value).slice(0, 8000) };
           }
         };
         for (const level of ['log', 'info', 'warn', 'error', 'debug']) {
@@ -121,14 +148,24 @@ export const createPreviewShell = (channelId: string, dependencyOrigins: string[
               type: 'preview:console',
               renderId: activeRenderId,
               level,
-              message: values.map(safeSerialize).join(' ').slice(0, 8000),
+              values: values.slice(0, 20).map(safeSerialize),
               timestamp: Date.now(),
             });
+            if (level === 'error') {
+              send({
+                type: 'preview:error',
+                renderId: activeRenderId,
+                category: 'runtime',
+                message: values.map((value) => safeSerialize(value).value).join(' ').slice(0, 8000) || 'Console error',
+                source: 'console.error',
+                recoverable: true,
+              });
+            }
             original(...values);
           };
         }
         const reportNetwork = (entry) => send({ type: 'preview:network', renderId: activeRenderId, ...entry });
-        const reportError = (category, error, line, column, source) => send({
+        const reportError = (category, error, line, column, source, recoverable = false) => send({
           type: 'preview:error',
           renderId: activeRenderId,
           category,
@@ -136,6 +173,7 @@ export const createPreviewShell = (channelId: string, dependencyOrigins: string[
           source,
           line: Number.isFinite(line) ? line : undefined,
           column: Number.isFinite(column) ? column : undefined,
+          recoverable,
         });
         const resolveRequestUrl = (input) => {
           try {
@@ -163,9 +201,11 @@ export const createPreviewShell = (channelId: string, dependencyOrigins: string[
             if (resolvedUrl?.origin === appOrigin) throw appOriginError();
             const response = await originalFetch(...args);
             reportNetwork({ id, method, url, kind: 'fetch', state: response.ok ? 'success' : 'error', startedAt, status: response.status, duration: Date.now() - startedAt });
+            if (!response.ok) reportError('network', new Error(method + ' ' + response.status + ' ' + response.statusText), undefined, undefined, url, true);
             return response;
           } catch (error) {
             reportNetwork({ id, method, url, kind: 'fetch', state: 'error', startedAt, duration: Date.now() - startedAt, message: error instanceof Error ? error.message : String(error) });
+            reportError(error?.name === 'SecurityError' ? 'security' : 'network', error, undefined, undefined, url, true);
             throw error;
           }
         };
@@ -191,19 +231,28 @@ export const createPreviewShell = (channelId: string, dependencyOrigins: string[
           if (blocked) {
             const error = appOriginError();
             reportNetwork({ id, ...networkDetails, kind: 'xhr', state: 'error', startedAt, duration: 0, message: error.message });
+            reportError('security', error, undefined, undefined, networkDetails.url, true);
             throw error;
           }
           this.addEventListener('loadend', () => {
             const success = this.status >= 200 && this.status < 400;
             reportNetwork({ id, ...networkDetails, kind: 'xhr', state: success ? 'success' : 'error', startedAt, status: this.status || undefined, duration: Date.now() - startedAt });
+            if (!success) reportError('network', new Error(networkDetails.method + ' ' + (this.status || 'failed')), undefined, undefined, networkDetails.url, true);
           }, { once: true });
           return originalXhrSend.apply(this, args);
         };
 
         window.addEventListener('error', (event) => {
-          const category = event.error?.name === 'SyntaxError' ? 'syntax' : 'runtime';
-          reportError(category, event.error || event.message, event.lineno, event.colno, event.filename);
-        });
+          if (event instanceof ErrorEvent) {
+            const category = event.error?.name === 'SyntaxError' ? 'syntax' : 'runtime';
+            reportError(category, event.error || event.message, event.lineno, event.colno, event.filename);
+            return;
+          }
+          const target = event.target;
+          if (!(target instanceof HTMLElement) || target.dataset.previewUrl) return;
+          const source = target.currentSrc || target.src || target.href;
+          reportError('network', new Error(target.tagName.toLowerCase() + ' resource failed to load'), undefined, undefined, source, true);
+        }, true);
         window.addEventListener('unhandledrejection', (event) => reportError('runtime', event.reason));
         window.addEventListener('securitypolicyviolation', (event) => reportError('security', event.violatedDirective, undefined, undefined, event.blockedURI));
 

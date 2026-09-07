@@ -21,6 +21,9 @@ import Dependencies from '../dependencies';
 import { DialogActions, DialogButton, DialogError, WorkbenchDialog } from '../sidebar/Files';
 
 const PROJECT_ID_PATTERN = /^[a-f0-9]{32}$/i;
+const PROJECT_EDIT_TOKEN_PATTERN = /^[a-f0-9]{64}$/i;
+const PROJECT_EDIT_TOKEN_KEY = 'projectEditToken';
+const API_HEADERS = { Accept: 'application/json', 'X-Frontend-Fun-Request': '1' };
 
 const Identity = styled.div`
   display: flex;
@@ -208,6 +211,41 @@ type DialogState = 'rename-project' | 'open-project' | 'reset-project' | null;
 const clearRemoteIdentity = () => {
   localStorage.removeItem('id');
   localStorage.removeItem('projectVersion');
+  localStorage.removeItem(PROJECT_EDIT_TOKEN_KEY);
+};
+
+const readApiResponse = async (response: Response) => {
+  const responseText = await response.text();
+  try {
+    return JSON.parse(responseText) as FilesResponse;
+  } catch {
+    throw new Error(response.status === 404 || response.headers.get('Content-Type')?.includes('text/html')
+      ? 'The project API is unavailable. Use the Pages development server for Save and Share.'
+      : `The project service returned an invalid response (${response.status}).`);
+  }
+};
+
+const copyText = async (value: string) => {
+  if (window.isSecureContext && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return true;
+    } catch {
+      // Fall back for browsers that lose clipboard permission after the save request.
+    }
+  }
+  const textarea = document.createElement('textarea');
+  textarea.value = value;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    return document.execCommand('copy');
+  } finally {
+    textarea.remove();
+  }
 };
 
 const projectUrl = (id: string) => {
@@ -250,6 +288,7 @@ const TopBar = () => {
   const [dialogError, setDialogError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
+  const saveInFlight = useRef(false);
 
   useEffect(() => {
     if (dialogState && !dialogRef.current?.open) dialogRef.current?.showModal();
@@ -287,6 +326,11 @@ const TopBar = () => {
     const files = validateFiles(data.filesData);
     const dependencies = validateDependencies(data.dependencies);
     if (!files || !dependencies || !data.version) throw new Error(data.err || 'Project not found.');
+    const currentId = localStorage.getItem('id');
+    const currentEditToken = localStorage.getItem(PROJECT_EDIT_TOKEN_KEY);
+    if (currentId !== id || !PROJECT_EDIT_TOKEN_PATTERN.test(currentEditToken || '')) {
+      localStorage.removeItem(PROJECT_EDIT_TOKEN_KEY);
+    }
     localStorage.setItem('id', id);
     localStorage.setItem('projectVersion', data.version);
     replaceFiles(files);
@@ -296,8 +340,12 @@ const TopBar = () => {
   };
 
   const loadProject = async (id: string) => {
-    const response = await fetch(`/api/getFilesData?id=${encodeURIComponent(id)}`);
-    const data = await response.json() as FilesResponse;
+    const response = await fetch(`/api/getFilesData?id=${encodeURIComponent(id)}`, {
+      headers: API_HEADERS,
+      credentials: 'same-origin',
+      cache: 'no-store',
+    });
+    const data = await readApiResponse(response);
     if (!response.ok) throw new Error(data.err || 'Project not found.');
     applyRemoteProject(id, data);
   };
@@ -315,14 +363,22 @@ const TopBar = () => {
   }, []);
 
   const saveProject = async (showConfirmation = true) => {
-    if (isSaving) return null;
+    if (saveInFlight.current) return null;
+    saveInFlight.current = true;
     setIsSaving(true);
     let id = localStorage.getItem('id');
     let version = localStorage.getItem('projectVersion');
+    let editToken = localStorage.getItem(PROJECT_EDIT_TOKEN_KEY);
     if (id && !PROJECT_ID_PATTERN.test(id)) {
       clearRemoteIdentity();
       id = null;
       version = null;
+      editToken = null;
+    }
+    if (!PROJECT_EDIT_TOKEN_PATTERN.test(editToken || '')) {
+      id = null;
+      version = null;
+      editToken = null;
     }
     const filesData = store.get(projectFilesAtom);
     const dependencies = store.get(projectDependenciesAtom);
@@ -330,14 +386,19 @@ const TopBar = () => {
     const serialized = JSON.stringify({ filesData, dependencies, projectName: currentProjectName } satisfies FilesPayload);
     if (new TextEncoder().encode(serialized).byteLength > MAX_PROJECT_SIZE) {
       toast.error('This project is larger than the 5 MiB remote save limit.');
+      saveInFlight.current = false;
       setIsSaving(false);
       return null;
     }
 
     try {
       if (id && !version) {
-        const existing = await fetch(`/api/getFilesData?id=${encodeURIComponent(id)}`);
-        const existingData = await existing.json() as FilesResponse;
+        const existing = await fetch(`/api/getFilesData?id=${encodeURIComponent(id)}`, {
+          headers: API_HEADERS,
+          credentials: 'same-origin',
+          cache: 'no-store',
+        });
+        const existingData = await readApiResponse(existing);
         if (!existing.ok || !existingData.version) {
           clearRemoteIdentity();
           id = null;
@@ -348,24 +409,34 @@ const TopBar = () => {
       }
       const response = await fetch(id ? `/api/saveFilesData?id=${encodeURIComponent(id)}` : '/api/saveFilesData', {
         method: 'POST',
-        headers: id && version
-          ? { 'Content-Type': 'application/json', Accept: 'application/json', 'If-Match': version }
-          : { 'Content-Type': 'application/json', Accept: 'application/json' },
+        headers: id && version && editToken
+          ? { ...API_HEADERS, 'Content-Type': 'application/json', 'If-Match': version, Authorization: `Bearer ${editToken}` }
+          : { ...API_HEADERS, 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        cache: 'no-store',
         body: serialized,
       });
-      const data = await response.json() as FilesResponse;
+      const data = await readApiResponse(response);
       if (!response.ok || !data.id || !data.version) {
         if (response.status === 409) throw new Error('This project changed elsewhere. Open it again before saving.');
         throw new Error(data.err || 'The project could not be saved.');
       }
+      if (!id && !PROJECT_EDIT_TOKEN_PATTERN.test(data.editToken || '')) {
+        throw new Error('The project was saved without a valid ownership token.');
+      }
       localStorage.setItem('id', data.id);
       localStorage.setItem('projectVersion', data.version);
+      if (!id) {
+        localStorage.setItem(PROJECT_EDIT_TOKEN_KEY, data.editToken!);
+      }
+      showProjectInUrl(data.id);
       if (showConfirmation) toast.success('Project saved.');
       return data.id;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'The project could not be saved.');
       return null;
     } finally {
+      saveInFlight.current = false;
       setIsSaving(false);
     }
   };
@@ -375,12 +446,12 @@ const TopBar = () => {
     const id = await saveProject(false);
     if (!id) return;
     const url = projectUrl(id);
+    showProjectInUrl(id);
     try {
-      await navigator.clipboard.writeText(url);
-      showProjectInUrl(id);
+      if (!await copyText(url)) throw new Error('Clipboard access was denied.');
       toast.success('Share link copied.');
     } catch {
-      toast.error('The project was saved, but the share link could not be copied.');
+      toast.error('The project was saved. Copy the share link from the address bar.');
     }
   };
 

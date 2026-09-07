@@ -18,7 +18,7 @@ Frontend Fun is a browser-based playground for writing, previewing, and sharing 
 
 ## Usage
 
-Files use names like `index.html`, `styles_v2.css`, or `app-1.js`. Paths, spaces, and unsupported extensions are rejected. Files and projects can be renamed from the workbench. The editor autosaves locally through IndexedDB and restores the last valid project after reload. Remote projects use an anonymous Project ID and shareable `?project=` URL; opening one replaces the files currently in the workbench.
+Files use names like `index.html`, `styles_v2.css`, or `app-1.js`. Paths, spaces, and unsupported extensions are rejected. Files and projects can be renamed from the workbench. The editor autosaves locally through IndexedDB and restores the last valid project after reload. Remote projects use an anonymous Project ID and shareable `?project=` URL; opening one replaces the files currently in the workbench. Share links are read-only. A separate edit token remains in the owner's browser and is never included in the URL or returned by the read API.
 
 Terminal shortcuts include `Ctrl+L`/`clear`, `Enter`, and backspace. New files can be created with `touch filename.css` or `touch filename.js`; HTML is kept as the single preview entry file. Existing files can be removed with `rm filename.html` (or another existing filename). The preview runs in a sandboxed iframe, so preview code cannot access the editor DOM or local storage. Runtime errors are shown above the preview.
 
@@ -61,7 +61,7 @@ Preview code can connect to external APIs with fetch, XHR, WebSocket, and EventS
 
 ### Persistence and remote storage
 
-Local projects are stored in IndexedDB. Remote save and open operations use Cloudflare Pages Functions. Updates include the stored version as `If-Match`, allowing the API to reject stale writes with `409` instead of overwriting newer data.
+Local projects are stored in IndexedDB. Remote save and open operations use Cloudflare Pages Functions. Updates require both the stored version and a private edit token. The API stores only the token's SHA-256 hash and rejects stale writes with `409` instead of overwriting newer data.
 
 ## Installation
 
@@ -86,7 +86,7 @@ corepack prepare pnpm@11.22.0 --activate
 
 ## Development
 
-Use `pnpm dev` for the Vite development server or `pnpm pages:dev` to build and run the Pages Functions locally. Deploy with `pnpm pages:deploy` after authenticating Wrangler. Create the Pages project once with `pnpm exec wrangler pages project create frontend-fun`.
+Use `pnpm dev` for the Vite-only development server. Use `pnpm pages:dev` on port 3000 to build and run the Pages Functions locally when testing Save and Share. Deploy with `pnpm pages:deploy` after authenticating Wrangler. Create the Pages project once with `pnpm exec wrangler pages project create frontend-fun`.
 
 ## Screenshot
 

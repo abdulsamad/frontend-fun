@@ -37,7 +37,7 @@
 	},
 	"scripts": {
 		"dev": "vite",
-		"pages:dev": "pnpm build && wrangler pages dev build --r2=PROJECTS",
+    "pages:dev": "pnpm build && wrangler pages dev build --r2=PROJECTS --port 3000",
 		"pages:deploy": "pnpm build && wrangler pages deploy build --project-name frontend-fun",
 		"start": "vite",
 		"build": "vite build && node scripts/build-pages.mjs",

@@ -11,6 +11,8 @@ const routes: Partial<Record<string, PagesFunction<Env>>> = {
   '/api/saveFilesData': saveFilesData,
 };
 
+const CLIENT_REQUEST_HEADER = 'X-Frontend-Fun-Request';
+
 const rejectCrossOriginApiRequest = (request: Request) => {
   const requestUrl = new URL(request.url);
   const origin = request.headers.get('Origin');
@@ -34,7 +36,10 @@ const forbiddenApiResponse = () => new Response(JSON.stringify({ err: 'Cross-ori
 export default {
   fetch(request: Request, env: Env, context: ExecutionContext) {
     const handler = routes[new URL(request.url).pathname];
-    if (handler && rejectCrossOriginApiRequest(request)) return forbiddenApiResponse();
+    if (handler && (
+      request.headers.get(CLIENT_REQUEST_HEADER) !== '1' ||
+      rejectCrossOriginApiRequest(request)
+    )) return forbiddenApiResponse();
     return handler ? handler({ request, env, waitUntil: context.waitUntil, next: () => env.ASSETS.fetch(request) } as never) : env.ASSETS.fetch(request);
   },
 };
