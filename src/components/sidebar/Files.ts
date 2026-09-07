@@ -17,23 +17,16 @@ export const ExplorerHeader = styled.header`
   }
 `;
 
-export const ActionGroup = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 2px;
-`;
-
-export const ToolbarButton = styled.button`
-  display: grid;
-  place-items: center;
-  min-inline-size: 28px;
+export const NewFileButton = styled.button`
+  min-inline-size: 76px;
   min-block-size: 28px;
-  padding: 0;
-  border: 0;
+  padding-inline: 10px;
+  border: 1px solid var(--workbench-border);
   border-radius: 4px;
-  background: transparent;
+  background: var(--workbench-editor);
   color: var(--workbench-text);
   cursor: pointer;
+  font-size: 0.75rem;
 
   &:hover:not(:disabled) {
     background: var(--workbench-hover);
@@ -56,8 +49,13 @@ export const ProjectHeader = styled.div`
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
   user-select: none;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 `;
 
 export const FileList = styled.ul`
@@ -71,7 +69,7 @@ export const FileList = styled.ul`
 
 export const FileRow = styled.li<{ $active?: boolean }>`
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 28px;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   min-block-size: 24px;
   padding-inline-start: 13px;
@@ -81,8 +79,12 @@ export const FileRow = styled.li<{ $active?: boolean }>`
     background: ${({ $active }) => ($active ? 'var(--workbench-selected)' : 'var(--workbench-hover)')};
   }
 
-  &:not(:hover):not(:focus-within) > button[aria-label^='Delete'] {
+  &:not(:hover):not(:focus-within) > div {
     opacity: 0;
+  }
+
+  @media (max-width: 959px) {
+    > div { opacity: 1 !important; }
   }
 `;
 
@@ -106,7 +108,13 @@ export const FileButton = styled.button`
   }
 `;
 
-export const DeleteButton = styled.button`
+export const FileActions = styled.div`
+  display: flex;
+  align-items: center;
+  padding-inline-end: 3px;
+`;
+
+export const FileActionButton = styled.button`
   display: grid;
   place-items: center;
   min-inline-size: 24px;
@@ -121,6 +129,30 @@ export const DeleteButton = styled.button`
   &:hover {
     background: #3c3c3c;
     color: var(--workbench-text);
+  }
+`;
+
+export const EmptyState = styled.div`
+  display: grid;
+  gap: 8px;
+  margin: 8px;
+  padding: 12px;
+  border: 1px dashed var(--workbench-border);
+  border-radius: 4px;
+  color: var(--workbench-muted);
+  font-size: 0.75rem;
+
+  p { margin: 0; }
+
+  button {
+    justify-self: start;
+    min-block-size: 28px;
+    padding-inline: 10px;
+    border: 1px solid var(--workbench-border);
+    border-radius: 3px;
+    background: var(--workbench-hover);
+    color: var(--workbench-text);
+    cursor: pointer;
   }
 `;
 

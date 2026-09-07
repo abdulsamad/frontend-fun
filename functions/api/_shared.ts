@@ -1,4 +1,4 @@
-import { validateDependencies, validateFiles } from '../../src/state/validation';
+import { isValidProjectName, validateDependencies, validateFiles } from '../../src/state/validation';
 import { FilesPayload, MAX_PROJECT_SIZE } from '../../src/shared/filesContract';
 
 export interface Env {
@@ -15,6 +15,7 @@ export const respond = (status: number, body: object) => new Response(JSON.strin
   headers: {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'no-store',
+    'Cross-Origin-Resource-Policy': 'same-origin',
     'X-Content-Type-Options': 'nosniff',
   },
 });
@@ -72,9 +73,11 @@ export const parseFilesPayload = async (request: Request) => {
   if (!filesData) return { error: respond(400, { err: 'Invalid files data.' }) };
   const dependencies = validateDependencies(body?.dependencies);
   if (!dependencies) return { error: respond(400, { err: 'Invalid preview dependencies.' }) };
-  const serialized = JSON.stringify({ filesData, dependencies });
+  const projectName = body?.projectName === undefined ? 'Untitled project' : body.projectName.trim();
+  if (!isValidProjectName(projectName)) return { error: respond(400, { err: 'Invalid project name.' }) };
+  const serialized = JSON.stringify({ filesData, dependencies, projectName });
   if (new TextEncoder().encode(serialized).byteLength > MAX_PROJECT_SIZE) {
     return { error: respond(413, { err: 'Project is larger than the 5 MiB remote save limit.' }) };
   }
-  return { filesData, dependencies, serialized };
+  return { filesData, dependencies, projectName, serialized };
 };

@@ -7,6 +7,7 @@ const MAX_FILE_VALUE_SIZE = 500_000;
 const MAX_FILES = 100;
 const MAX_DEPENDENCIES = 20;
 const MAX_DEPENDENCY_URL_SIZE = 2048;
+const MAX_PROJECT_NAME_SIZE = 60;
 
 export const getLanguageFromFilename = (name: string): string => {
   const extension = name.split('.').pop()?.toLowerCase();
@@ -18,6 +19,9 @@ export const isValidFilename = (name: unknown): name is string =>
 
 export const isValidNewFilename = (name: unknown): name is string =>
   isValidFilename(name) && !/\.html$/i.test(name);
+
+export const isValidProjectName = (name: unknown): name is string =>
+  typeof name === 'string' && name.trim().length > 0 && name.trim().length <= MAX_PROJECT_NAME_SIZE && !/[\u0000-\u001f\u007f]/.test(name);
 
 export const isValidFile = (file: unknown): file is ProjectFile => {
   if (!file || typeof file !== 'object') return false;
@@ -64,4 +68,4 @@ export const validateDependencies = (value: unknown): PreviewDependency[] | null
     : null;
 };
 
-export { MAX_FILE_VALUE_SIZE, MAX_FILES, MAX_DEPENDENCIES, MAX_DEPENDENCY_URL_SIZE };
+export { MAX_FILE_VALUE_SIZE, MAX_FILES, MAX_DEPENDENCIES, MAX_DEPENDENCY_URL_SIZE, MAX_PROJECT_NAME_SIZE };

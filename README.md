@@ -9,15 +9,16 @@ Frontend Fun is a browser-based playground for writing, previewing, and sharing 
 - VS Code-style Explorer, editor tabs, status bar, terminal, and resizable panes
 - VS Code-style top bar with One Dark, VS Code Dark, and High Contrast themes
 - Configurable word wrap, editor font size, terminal visibility, and auto-save
-- Sandboxed live preview for HTML, CSS, and JavaScript
+- Sandboxed live preview with responsive, tablet, mobile, and full-screen modes
 - Local autosave and offline support
-- Remote project save and restore with a Project ID
+- Named projects with remote save, share links, copies, and Project ID restore
+- Multi-file import and dependency-free ZIP export
 - Responsive Files, Code, Preview, and Terminal views
-- Monaco Editor with Emmet and word wrapping
+- Monaco Editor with Emmet, document formatting, and word wrapping
 
 ## Usage
 
-Files use names like `index.html`, `styles_v2.css`, or `app-1.js`. Paths, spaces, and unsupported extensions are rejected. The editor autosaves locally through IndexedDB and restores the last valid project after reload. Remote projects use an anonymous Project ID; opening one replaces the files currently in the workbench.
+Files use names like `index.html`, `styles_v2.css`, or `app-1.js`. Paths, spaces, and unsupported extensions are rejected. Files and projects can be renamed from the workbench. The editor autosaves locally through IndexedDB and restores the last valid project after reload. Remote projects use an anonymous Project ID and shareable `?project=` URL; opening one replaces the files currently in the workbench.
 
 Terminal shortcuts include `Ctrl+L`/`clear`, `Enter`, and backspace. New files can be created with `touch filename.css` or `touch filename.js`; HTML is kept as the single preview entry file. Existing files can be removed with `rm filename.html` (or another existing filename). The preview runs in a sandboxed iframe, so preview code cannot access the editor DOM or local storage. Runtime errors are shown above the preview.
 
@@ -56,15 +57,11 @@ Explorer, editor, preview, and terminal modules are loaded with React lazy impor
 
 CSS is assigned through `textContent`, so values containing closing style tags cannot escape into the iframe shell. CSS-only edits update the existing document without remounting it. HTML or JavaScript edits create a new iframe revision, which resets prior document and script state. Render IDs prevent duplicate script execution, while runtime errors and unhandled promise rejections are reported to the preview toolbar.
 
+Preview code can connect to external APIs with fetch, XHR, WebSocket, and EventSource. The opaque iframe origin, an app-origin request guard, and server-side fetch metadata checks prevent preview code from reading or mutating Frontend Fun project APIs and R2-backed storage.
+
 ### Persistence and remote storage
 
-Local projects are stored in IndexedDB. Remote save and open operations use Cloudflare Pages Functions, shared validation rules, and an R2 binding named `PROJECTS`. Updates include the stored version as `If-Match`, allowing the API to reject stale writes with `409` instead of overwriting newer data.
-
-## API behavior
-
-`POST /api/saveFilesData` accepts `{ "filesData": File[] }` and returns `{ id, version }`. To update, add `?id=<projectId>` and send that version as `If-Match`; stale updates return `409` rather than overwriting newer work. `GET /api/getFilesData?id=<projectId>` imports one and returns the latest version. Invalid methods, JSON, IDs, file names, languages, duplicate names, and oversized values receive a `4xx` response; missing saved projects return `404`.
-
-Known limits: projects are capped at 100 files, each file at 500 KB, and 5 MiB per remote project. Remote projects are stored as JSON objects in the Cloudflare R2 bucket bound as `PROJECTS`; this app uses the `frontend-fun/projects/` prefix so the `experimental` bucket can safely serve other small projects too.
+Local projects are stored in IndexedDB. Remote save and open operations use Cloudflare Pages Functions. Updates include the stored version as `If-Match`, allowing the API to reject stale writes with `409` instead of overwriting newer data.
 
 ## Installation
 

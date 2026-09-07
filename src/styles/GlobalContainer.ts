@@ -27,6 +27,7 @@ export const WorkbenchFrame = styled.div`
 export const WorkbenchTopBar = styled.header`
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 2px;
   padding-inline: 8px;
   border-block-end: 1px solid var(--workbench-border);
@@ -89,9 +90,9 @@ export const CompactWorkbench = styled.div`
   min-block-size: 0;
 `;
 
-export const CompactViewTabs = styled.nav`
+export const CompactViewTabs = styled.nav<{ $columns: number }>`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(${({ $columns }) => $columns}, minmax(0, 1fr));
   border-block-end: 1px solid var(--workbench-border);
   background: var(--workbench-elevated);
 `;

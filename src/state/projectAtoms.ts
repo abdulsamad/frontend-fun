@@ -3,7 +3,9 @@ import { selectAtom } from 'jotai/utils';
 
 import { defaultActiveFile, defaultFilesData, defaultFilesList } from './data';
 import { PreviewDependency, ProjectFile } from './types';
-import { validateFiles } from './validation';
+import { getLanguageFromFilename, isValidFilename, isValidProjectName, validateFiles } from './validation';
+
+export const DEFAULT_PROJECT_NAME = 'Untitled project';
 
 export interface ProjectFileSummary {
   name: string;
@@ -15,6 +17,7 @@ export const activeFileNameAtom = atom(defaultActiveFile.name);
 export const openFileNamesAtom = atom<string[]>(defaultFilesList);
 export const projectHydratedAtom = atom(false);
 export const projectDependenciesAtom = atom<PreviewDependency[]>([]);
+export const projectNameAtom = atom(DEFAULT_PROJECT_NAME);
 
 const summariesEqual = (left: ProjectFileSummary[], right: ProjectFileSummary[]) =>
   left.length === right.length && left.every((file, index) => (
@@ -93,6 +96,35 @@ export const updateActiveFileAtom = atom(null, (get, set, value: string) => {
   set(projectFilesAtom, (files) => files.map((file) => (
     file.name === activeName ? { ...file, value } : file
   )));
+});
+
+export const renameProjectFileAtom = atom(null, (get, set, value: { filename: string; nextName: string }) => {
+  const nextName = value.nextName.trim();
+  if (!isValidFilename(nextName)) return false;
+  const files = get(projectFilesAtom);
+  if (!files.some(({ name }) => name === value.filename)) return false;
+  if (files.some(({ name }) => name !== value.filename && name.toLowerCase() === nextName.toLowerCase())) return false;
+
+  set(projectFilesAtom, files.map((file) => file.name === value.filename
+    ? { ...file, name: nextName, language: getLanguageFromFilename(nextName) }
+    : file));
+  set(openFileNamesAtom, (openFiles) => openFiles.map((name) => name === value.filename ? nextName : name));
+  if (get(activeFileNameAtom) === value.filename) set(activeFileNameAtom, nextName);
+  return true;
+});
+
+export const renameProjectAtom = atom(null, (_get, set, value: string) => {
+  const name = value.trim();
+  if (!isValidProjectName(name)) return false;
+  set(projectNameAtom, name);
+  return true;
+});
+
+export const resetProjectAtom = atom(null, (get, set) => {
+  const files = get(projectFilesAtom).map((file) => ({ ...file, value: '' }));
+  set(projectFilesAtom, files);
+  set(projectDependenciesAtom, []);
+  set(projectNameAtom, DEFAULT_PROJECT_NAME);
 });
 
 export const replaceProjectFilesAtom = atom(null, (_get, set, value: unknown) => {

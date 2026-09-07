@@ -84,11 +84,13 @@ export const EditorActions = styled.div`
 `;
 
 export const ActionButton = styled.button<{ $active?: boolean }>`
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   min-inline-size: 28px;
   min-block-size: 28px;
-  padding: 0;
+  padding-inline: 8px;
   border: 0;
   border-radius: 4px;
   background: ${({ $active }) => ($active ? 'var(--workbench-selected)' : 'transparent')};
@@ -98,5 +100,17 @@ export const ActionButton = styled.button<{ $active?: boolean }>`
   &:hover {
     background: var(--workbench-hover);
     color: var(--workbench-text);
+  }
+
+  span {
+    font-size: 0.6875rem;
+  }
+
+  @media (max-width: 520px) {
+    padding-inline: 6px;
+
+    span {
+      display: none;
+    }
   }
 `;

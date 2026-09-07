@@ -13,15 +13,11 @@ import GlobalContainer, {
   CompactViewTabs,
   CompactWorkbench,
   PaneLoading,
-  TopBarBrand,
-  TopBarMenu,
-  TopBarMenuPanel,
   WorkbenchFrame,
-  WorkbenchTopBar,
 } from './styles/GlobalContainer';
 import ProjectStateEffects from './state/ProjectStateEffects';
 import { defaultWorkbenchSettings, workbenchSettingsAtom } from './state/settings';
-import Dependencies from './components/dependencies';
+import TopBar from './components/top-bar';
 
 const Sidebar = lazy(() => import('./components/sidebar'));
 const Editor = lazy(() => import('./components/editor'));
@@ -147,14 +143,14 @@ const NarrowWorkbench = () => {
     if (event.key === 'ArrowRight') selectView(index + 1);
     else if (event.key === 'ArrowLeft') selectView(index - 1);
     else if (event.key === 'Home') selectView(0);
-    else if (event.key === 'End') selectView(compactViews.length - 1);
+    else if (event.key === 'End') selectView(availableViews.length - 1);
     else return;
     event.preventDefault();
   };
 
   return (
     <CompactWorkbench>
-      <CompactViewTabs aria-label='Workbench views' role='tablist'>
+      <CompactViewTabs aria-label='Workbench views' role='tablist' $columns={availableViews.length}>
         {availableViews.map((view, index) => (
           <CompactViewButton
             key={view.id}
@@ -191,35 +187,6 @@ const NarrowWorkbench = () => {
   );
 };
 
-const SettingsBar = () => {
-  const settings = useAtomValue(workbenchSettingsAtom);
-  const setSettings = useSetAtom(workbenchSettingsAtom);
-
-  return (
-    <WorkbenchTopBar>
-      <TopBarBrand>Frontend Fun</TopBarBrand>
-      <Dependencies />
-      <TopBarMenu>
-        <summary>View</summary>
-        <TopBarMenuPanel>
-          <label>Theme<select value={settings.theme} onChange={(event) => setSettings((current) => ({ ...current, theme: event.target.value as typeof current.theme }))}>
-            <option value='one-dark'>One Dark</option>
-            <option value='one-dark-pro'>One Dark Pro</option>
-            <option value='vscode-dark'>VS Code Dark</option>
-            <option value='high-contrast'>High Contrast</option>
-          </select></label>
-          <label>Font size<select value={settings.fontSize} onChange={(event) => setSettings((current) => ({ ...current, fontSize: Number(event.target.value) }))}>
-            {[12, 13, 14, 15, 16, 18].map((size) => <option key={size} value={size}>{size}px</option>)}
-          </select></label>
-          <label>Word wrap<input type='checkbox' checked={settings.wordWrap} onChange={(event) => setSettings((current) => ({ ...current, wordWrap: event.target.checked }))} /></label>
-          <label>Show terminal<input type='checkbox' checked={settings.showTerminal} onChange={(event) => setSettings((current) => ({ ...current, showTerminal: event.target.checked }))} /></label>
-          <label>Auto-save<input type='checkbox' checked={settings.autoSave} onChange={(event) => setSettings((current) => ({ ...current, autoSave: event.target.checked }))} /></label>
-        </TopBarMenuPanel>
-      </TopBarMenu>
-    </WorkbenchTopBar>
-  );
-};
-
 const App = () => {
   const compact = useCompactLayout();
   const settings = useAtomValue(workbenchSettingsAtom);
@@ -244,7 +211,7 @@ const App = () => {
       <AppErrorBoundary>
         <ProjectStateEffects />
         <WorkbenchFrame>
-          <SettingsBar />
+          <TopBar />
           <GlobalContainer>{compact ? <NarrowWorkbench /> : <DesktopWorkbench />}</GlobalContainer>
         </WorkbenchFrame>
       </AppErrorBoundary>

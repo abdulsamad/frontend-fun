@@ -14,7 +14,7 @@ import {
 import { workbenchSettingsAtom } from '../../state/settings';
 import AddLanguageLogo from '../../utils/AddLanguageLogo';
 import Icon from '../Icon';
-import EditorGroup, { Breadcrumbs, EditorSurface, StatusBar, StatusGroup } from './Editor';
+import EditorGroup, { Breadcrumbs, EditorSurface, EmptyEditorHint, StatusBar, StatusGroup } from './Editor';
 import { ActionButton, CloseButton, EditorActions, EditorTabs, Tab, TabButton, TabList } from './Nav';
 import { customTheme, oneDarkProTheme, oneDarkTheme } from './themes';
 
@@ -28,15 +28,26 @@ const Editor = () => {
   const settings = useAtomValue(workbenchSettingsAtom);
   const setSettings = useSetAtom(workbenchSettingsAtom);
   const [cursor, setCursor] = useState({ lineNumber: 1, column: 1 });
+  const [isEditorReady, setIsEditorReady] = useState(false);
+  const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
   const cursorSubscription = useRef<{ dispose: () => void } | null>(null);
 
   useEffect(() => () => cursorSubscription.current?.dispose(), []);
 
   const handleEditorMount: OnMount = (editor, monaco) => {
+    editorRef.current = editor;
+    setIsEditorReady(true);
     emmetHTML(monaco as never);
     emmetCSS(monaco as never);
     cursorSubscription.current?.dispose();
     cursorSubscription.current = editor.onDidChangeCursorPosition(({ position }) => setCursor(position));
+  };
+
+  const formatDocument = async () => {
+    const action = editorRef.current?.getAction('editor.action.formatDocument');
+    if (!action) return;
+    await action.run();
+    editorRef.current?.focus();
   };
 
   const focusTab = (filename: string) => {
@@ -101,13 +112,19 @@ const Editor = () => {
           })}
         </TabList>
         <EditorActions>
+          <ActionButton type='button' aria-label='Format document' title='Format document' onClick={() => void formatDocument()}>
+            <Icon name='format' />
+            <span>Format</span>
+          </ActionButton>
           <ActionButton type='button' $active={settings.wordWrap} aria-pressed={settings.wordWrap} aria-label='Toggle word wrap' title={`Word wrap: ${settings.wordWrap ? 'on' : 'off'}`} onClick={() => setSettings((current) => ({ ...current, wordWrap: !current.wordWrap }))}>
             <Icon name='word-wrap' />
+            <span>Wrap</span>
           </ActionButton>
         </EditorActions>
       </EditorTabs>
       <Breadcrumbs aria-label='File location'><span>frontend-fun</span><span>{activeFile.name}</span></Breadcrumbs>
       <EditorSurface>
+        {isEditorReady && !activeFile.value && <EmptyEditorHint>Start writing in {activeFile.name}</EmptyEditorHint>}
         <MonacoEditor
           theme={settings.theme === 'one-dark-pro' ? 'frontend-fun-one-dark-pro' : settings.theme === 'one-dark' ? 'frontend-fun-one-dark' : 'frontend-fun-dark'}
           language={activeFile.language}

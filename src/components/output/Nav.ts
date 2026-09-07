@@ -10,6 +10,11 @@ export const PreviewToolbar = styled.header`
   border-block-end: 1px solid var(--workbench-border);
   background: var(--workbench-elevated);
   color: var(--workbench-text);
+
+  @media (max-width: 620px) {
+    display: flex;
+    justify-content: flex-end;
+  }
 `;
 
 export const PreviewLabel = styled.span`
@@ -18,6 +23,10 @@ export const PreviewLabel = styled.span`
   font-size: 0.6875rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+
+  @media (max-width: 620px) {
+    display: none;
+  }
 `;
 
 export const PreviewAddressBar = styled.div`
@@ -37,6 +46,10 @@ export const PreviewAddressBar = styled.div`
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  @media (max-width: 620px) {
+    display: none;
   }
 `;
 
@@ -78,6 +91,38 @@ export const ReloadButton = styled.button`
   &:hover {
     background: var(--workbench-hover);
     color: var(--workbench-text);
+  }
+`;
+
+export const PreviewControlGroup = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  border: 1px solid #3c3c3c;
+  border-radius: 4px;
+  background: var(--workbench-editor);
+`;
+
+export const PreviewControlButton = styled.button<{ $active?: boolean }>`
+  display: grid;
+  place-items: center;
+  inline-size: 26px;
+  block-size: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: ${({ $active }) => ($active ? 'var(--workbench-selected)' : 'transparent')};
+  color: ${({ $active }) => ($active ? 'var(--workbench-text)' : 'var(--workbench-muted)')};
+  cursor: pointer;
+
+  &:hover {
+    background: var(--workbench-hover);
+    color: var(--workbench-text);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--workbench-focus);
+    outline-offset: -1px;
   }
 `;
 

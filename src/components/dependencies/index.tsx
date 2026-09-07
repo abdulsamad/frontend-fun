@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useAtom } from 'jotai';
 import styled from 'styled-components';
 
@@ -8,16 +8,22 @@ import { PreviewDependencyType } from '../../state/types';
 const Panel = styled.details`
   position: relative;
 
-  summary { padding: 5px 8px; border-radius: 3px; color: var(--workbench-muted); cursor: pointer; font-size: 0.75rem; list-style: none; }
+  summary { box-sizing: border-box; display: flex; align-items: center; justify-content: center; block-size: 28px; padding-inline: 8px; border-radius: 3px; color: var(--workbench-muted); cursor: pointer; font-size: 0.75rem; line-height: 1; list-style: none; }
   summary::-webkit-details-marker { display: none; }
   summary:hover { background: var(--workbench-hover); color: var(--workbench-text); }
+
+  .compact-label { display: none; }
+  @media (max-width: 560px) {
+    .full-label { display: none; }
+    .compact-label { display: inline; }
+  }
 `;
 
 const Content = styled.div`
-  position: absolute;
+  position: fixed;
   z-index: 20;
-  inset-block-start: 31px;
-  inset-inline-start: 0;
+  inset-block-start: 36px;
+  inset-inline-end: 8px;
   display: grid;
   gap: 10px;
   inline-size: min(380px, calc(100vw - 24px));
@@ -64,6 +70,15 @@ const Dependencies = () => {
   const [type, setType] = useState<PreviewDependencyType>('script');
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
+  const panelRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (panelRef.current && !panelRef.current.contains(event.target as Node)) panelRef.current.open = false;
+    };
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    return () => document.removeEventListener('pointerdown', closeOnOutsideClick);
+  }, []);
 
   const addDependency = (event: FormEvent) => {
     event.preventDefault();
@@ -94,11 +109,11 @@ const Dependencies = () => {
   };
 
   return (
-    <Panel>
-      <summary>Dependencies ({dependencies.filter(({ enabled }) => enabled).length})</summary>
+    <Panel ref={panelRef}>
+      <summary><span className='full-label'>Dependencies ({dependencies.filter(({ enabled }) => enabled).length})</span><span className='compact-label'>Deps</span></summary>
       <Content>
         <strong>CDN dependencies</strong>
-        <small>HTTPS resources load before your project code. Runtime network requests stay blocked.</small>
+        <small>HTTPS resources load before your project code. External requests follow browser CORS rules.</small>
         {dependencies.map((dependency, index) => (
           <DependencyRow key={dependency.id}>
             <input type='checkbox' checked={dependency.enabled} aria-label={`Enable ${dependency.url}`} onChange={() => setDependencies(dependencies.map((current) => current.id === dependency.id ? { ...current, enabled: !current.enabled } : current))} />

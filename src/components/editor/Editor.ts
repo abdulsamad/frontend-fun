@@ -29,9 +29,22 @@ export const Breadcrumbs = styled.div`
 `;
 
 export const EditorSurface = styled.div`
+  position: relative;
   flex: 1;
   min-inline-size: 0;
   min-block-size: 0;
+`;
+
+export const EmptyEditorHint = styled.div`
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--workbench-muted);
+  font-size: 0.75rem;
+  pointer-events: none;
+  user-select: none;
 `;
 
 export const StatusBar = styled.footer`

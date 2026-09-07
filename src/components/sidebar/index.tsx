@@ -1,44 +1,40 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
-import { useAtomValue, useSetAtom, useStore } from 'jotai';
-import { toast } from 'react-toastify';
+import { FormEvent, MouseEvent, useEffect, useRef, useState } from 'react';
+import { useAtomValue, useSetAtom } from 'jotai';
 
 import {
   activeFileNameAtom,
   addProjectFileAtom,
   projectFileNamesAtom,
   projectFileSummariesAtom,
-  projectFilesAtom,
-  projectDependenciesAtom,
+  projectNameAtom,
   removeProjectFileAtom,
-  replaceProjectFilesAtom,
+  renameProjectFileAtom,
   selectProjectFileAtom,
 } from '../../state/projectAtoms';
-import { getLanguageFromFilename, isValidNewFilename, validateDependencies, validateFiles } from '../../state/validation';
-import { FilesPayload, FilesResponse, MAX_PROJECT_SIZE } from '../../shared/filesContract';
+import { getLanguageFromFilename, isValidFilename, isValidNewFilename } from '../../state/validation';
 import AddLanguageLogo from '../../utils/AddLanguageLogo';
 import Icon from '../Icon';
 import SidebarShell, { ExplorerPane } from './Sidebar';
-import { ActivityBar, ActivityButton, UserId } from './Panel';
+import { ActivityBar, ActivityButton } from './Panel';
 import {
-  ActionGroup,
-  DeleteButton,
   DialogActions,
   DialogButton,
   DialogError,
+  EmptyState,
   ExplorerHeader,
+  FileActionButton,
+  FileActions,
   FileButton,
   FileList,
   FileRow,
+  NewFileButton,
   ProjectHeader,
-  ToolbarButton,
   WorkbenchDialog,
 } from './Files';
 
-const PROJECT_ID_PATTERN = /^[a-f0-9]{32}$/i;
-
 type DialogState =
   | { type: 'new-file' }
-  | { type: 'open-project' }
+  | { type: 'rename-file'; filename: string }
   | { type: 'delete-file'; filename: string }
   | null;
 
@@ -46,16 +42,14 @@ const Sidebar = () => {
   const files = useAtomValue(projectFileSummariesAtom);
   const fileNames = useAtomValue(projectFileNamesAtom);
   const activeFileName = useAtomValue(activeFileNameAtom);
+  const projectName = useAtomValue(projectNameAtom);
   const addFile = useSetAtom(addProjectFileAtom);
   const removeFile = useSetAtom(removeProjectFileAtom);
-  const replaceFiles = useSetAtom(replaceProjectFilesAtom);
+  const renameFile = useSetAtom(renameProjectFileAtom);
   const selectFile = useSetAtom(selectProjectFileAtom);
-  const store = useStore();
   const [dialogState, setDialogState] = useState<DialogState>(null);
   const [dialogValue, setDialogValue] = useState('');
   const [dialogError, setDialogError] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-  const [isOpening, setIsOpening] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -63,9 +57,13 @@ const Sidebar = () => {
   }, [dialogState]);
 
   const openDialog = (nextDialog: DialogState) => {
-    setDialogValue('');
+    setDialogValue(nextDialog?.type === 'rename-file' ? nextDialog.filename : '');
     setDialogError('');
     setDialogState(nextDialog);
+  };
+
+  const addNamedFile = (filename: string) => {
+    addFile({ name: filename, language: getLanguageFromFilename(filename), value: '' });
   };
 
   const closeDialog = () => {
@@ -86,7 +84,26 @@ const Sidebar = () => {
       setDialogError('A file with this name already exists.');
       return;
     }
-    addFile({ name: filename, language: getLanguageFromFilename(filename), value: '' });
+    addNamedFile(filename);
+    closeDialog();
+  };
+
+  const renameSelectedFile = (event: FormEvent) => {
+    event.preventDefault();
+    if (dialogState?.type !== 'rename-file') return;
+    const nextName = dialogValue.trim();
+    if (!isValidFilename(nextName)) {
+      setDialogError('Use a valid .html, .css, or .js filename.');
+      return;
+    }
+    if (fileNames.some((name) => name !== dialogState.filename && name.toLowerCase() === nextName.toLowerCase())) {
+      setDialogError('A file with this name already exists.');
+      return;
+    }
+    if (!renameFile({ filename: dialogState.filename, nextName })) {
+      setDialogError('The file could not be renamed.');
+      return;
+    }
     closeDialog();
   };
 
@@ -101,88 +118,8 @@ const Sidebar = () => {
     closeDialog();
   };
 
-  const saveProject = async () => {
-    if (isSaving) return;
-    setIsSaving(true);
-    let id = localStorage.getItem('id');
-    let version = localStorage.getItem('projectVersion');
-    if (id && !PROJECT_ID_PATTERN.test(id)) {
-      localStorage.removeItem('id');
-      localStorage.removeItem('projectVersion');
-      id = null;
-      version = null;
-    }
-    const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
-    const filesData = store.get(projectFilesAtom);
-    const dependencies = store.get(projectDependenciesAtom);
-    const serialized = JSON.stringify({ filesData, dependencies } satisfies FilesPayload);
-    if (new TextEncoder().encode(serialized).byteLength > MAX_PROJECT_SIZE) {
-      toast.error('This project is larger than the 5 MiB remote save limit.');
-      setIsSaving(false);
-      return;
-    }
-
-    try {
-      if (id && !version) {
-        const existing = await fetch(`/api/getFilesData?id=${encodeURIComponent(id)}`);
-        const existingData = await existing.json() as FilesResponse;
-        if (!existing.ok || !existingData.version) {
-          localStorage.removeItem('id');
-          localStorage.removeItem('projectVersion');
-          id = null;
-        } else {
-          version = existingData.version;
-          localStorage.setItem('projectVersion', version);
-        }
-      }
-      const saveHeaders = id && version ? { ...headers, 'If-Match': version } : headers;
-      const response = await fetch(id ? `/api/saveFilesData?id=${encodeURIComponent(id)}` : '/api/saveFilesData', {
-        method: 'POST',
-        headers: saveHeaders,
-        body: serialized,
-      });
-      const data = await response.json() as FilesResponse;
-      if (!response.ok || !data.id || !data.version) {
-        if (response.status === 409) throw new Error('This project changed elsewhere. Open it again before saving.');
-        if (response.status === 413) throw new Error('This project is larger than the 5 MiB remote save limit.');
-        throw new Error(data.err || 'The project could not be saved.');
-      }
-      localStorage.setItem('id', data.id);
-      localStorage.setItem('projectVersion', data.version);
-      toast.success(<div>Project saved.<br /><UserId>{data.id}</UserId></div>);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'The project could not be saved.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const openProject = async (event: FormEvent) => {
-    event.preventDefault();
-    const id = dialogValue.trim();
-    if (!PROJECT_ID_PATTERN.test(id)) {
-      setDialogError('Enter a valid 32-character Project ID.');
-      return;
-    }
-    setIsOpening(true);
-    setDialogError('');
-    try {
-      const response = await fetch(`/api/getFilesData?id=${encodeURIComponent(id)}`);
-      const data = await response.json() as FilesResponse;
-      const imported = validateFiles(data.filesData);
-      const dependencies = validateDependencies(data.dependencies);
-      if (!response.ok || !imported || !dependencies || !data.version) throw new Error(data.err || 'Project not found.');
-      localStorage.setItem('id', id);
-      localStorage.setItem('projectVersion', data.version);
-      replaceFiles(imported);
-      store.set(projectDependenciesAtom, dependencies);
-      closeDialog();
-      toast.success('Project opened.');
-    } catch (error) {
-      setDialogError(error instanceof Error ? error.message : 'The project could not be opened.');
-    } finally {
-      setIsOpening(false);
-    }
+  const closeDialogOnBackdrop = (event: MouseEvent<HTMLDialogElement>) => {
+    if (event.target === event.currentTarget) closeDialog();
   };
 
   return (
@@ -195,20 +132,10 @@ const Sidebar = () => {
       </ActivityBar>
       <ExplorerPane>
         <ExplorerHeader>
-          <h2>Explorer</h2>
-          <ActionGroup>
-            <ToolbarButton type='button' aria-label='New file' title='New file' onClick={() => openDialog({ type: 'new-file' })}>
-              <Icon name='file-add' />
-            </ToolbarButton>
-            <ToolbarButton type='button' aria-label='Save project' title='Save project' disabled={isSaving} aria-busy={isSaving} onClick={saveProject}>
-              <Icon name='save' />
-            </ToolbarButton>
-            <ToolbarButton type='button' aria-label='Open saved project' title='Open saved project' onClick={() => openDialog({ type: 'open-project' })}>
-              <Icon name='open' />
-            </ToolbarButton>
-          </ActionGroup>
+          <h2>Files</h2>
+          <NewFileButton type='button' onClick={() => openDialog({ type: 'new-file' })}>New file</NewFileButton>
         </ExplorerHeader>
-        <ProjectHeader><Icon name='chevron-down' size={14} /> Frontend Fun</ProjectHeader>
+        <ProjectHeader title={projectName}><Icon name='chevron-down' size={14} /><span>{projectName}</span></ProjectHeader>
         <FileList aria-label='Project files'>
           {files.map((file) => (
             <FileRow $active={file.name === activeFileName} key={file.name}>
@@ -216,17 +143,28 @@ const Sidebar = () => {
                 <AddLanguageLogo fileName={file.name} />
                 <span>{file.name}</span>
               </FileButton>
-              {!/\.html$/i.test(file.name) && (
-                <DeleteButton type='button' aria-label={`Delete ${file.name}`} title={`Delete ${file.name}`} onClick={() => openDialog({ type: 'delete-file', filename: file.name })}>
-                  <Icon name='delete' size={14} />
-                </DeleteButton>
-              )}
+              <FileActions>
+                <FileActionButton type='button' aria-label={`Rename ${file.name}`} title={`Rename ${file.name}`} onClick={() => openDialog({ type: 'rename-file', filename: file.name })}>
+                  <Icon name='edit' size={14} />
+                </FileActionButton>
+                {!/\.html$/i.test(file.name) && (
+                  <FileActionButton type='button' aria-label={`Delete ${file.name}`} title={`Delete ${file.name}`} onClick={() => openDialog({ type: 'delete-file', filename: file.name })}>
+                    <Icon name='delete' size={14} />
+                  </FileActionButton>
+                )}
+              </FileActions>
             </FileRow>
           ))}
         </FileList>
+        {!files.some(({ name }) => /\.css$/i.test(name)) && (
+          <EmptyState>
+            <p>This project has no stylesheet.</p>
+            <button type='button' onClick={() => addNamedFile(fileNames.includes('style.css') ? 'styles.css' : 'style.css')}>Add stylesheet</button>
+          </EmptyState>
+        )}
       </ExplorerPane>
 
-      <WorkbenchDialog ref={dialogRef} onClose={() => setDialogState(null)}>
+      <WorkbenchDialog ref={dialogRef} onCancel={closeDialog} onClick={closeDialogOnBackdrop} onClose={() => setDialogState(null)}>
         {dialogState?.type === 'new-file' && (
           <form onSubmit={createFile}>
             <h2>New file</h2>
@@ -235,13 +173,12 @@ const Sidebar = () => {
             <DialogActions><DialogButton type='button' onClick={closeDialog}>Cancel</DialogButton><DialogButton $primary type='submit'>Create file</DialogButton></DialogActions>
           </form>
         )}
-        {dialogState?.type === 'open-project' && (
-          <form onSubmit={openProject}>
-            <h2>Open saved project</h2>
-            <p>Opening a project replaces the files currently in this workbench.</p>
-            <label htmlFor='project-id'>Project ID<input id='project-id' name='projectId' autoFocus value={dialogValue} onChange={(event) => setDialogValue(event.target.value)} placeholder='32-character Project ID' /></label>
+        {dialogState?.type === 'rename-file' && (
+          <form onSubmit={renameSelectedFile}>
+            <h2>Rename {dialogState.filename}</h2>
+            <label htmlFor='rename-file-name'>File name<input id='rename-file-name' name='fileName' autoFocus value={dialogValue} onChange={(event) => setDialogValue(event.target.value)} /></label>
             {dialogError && <DialogError role='alert'>{dialogError}</DialogError>}
-            <DialogActions><DialogButton type='button' onClick={closeDialog}>Cancel</DialogButton><DialogButton $primary type='submit' disabled={isOpening}>{isOpening ? 'Opening…' : 'Open project'}</DialogButton></DialogActions>
+            <DialogActions><DialogButton type='button' onClick={closeDialog}>Cancel</DialogButton><DialogButton $primary type='submit'>Rename file</DialogButton></DialogActions>
           </form>
         )}
         {dialogState?.type === 'delete-file' && (

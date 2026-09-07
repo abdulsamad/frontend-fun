@@ -10,6 +10,10 @@ const PreviewPane = styled.section`
   overflow: hidden;
   border-inline-start: 1px solid var(--workbench-border);
   background: #fff;
+
+  &:fullscreen {
+    border: 0;
+  }
 `;
 
 export default PreviewPane;
