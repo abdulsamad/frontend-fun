@@ -77,13 +77,6 @@ Install dependencies with pnpm
 pnpm install
 ```
 
-If pnpm is not installed yet:
-
-```bash
-corepack enable
-corepack prepare pnpm@11.22.0 --activate
-```
-
 ## Development
 
 Use `pnpm dev` for the Vite-only development server. Use `pnpm pages:dev` on port 3000 to build and run the Pages Functions locally when testing Save and Share. Deploy with `pnpm pages:deploy` after authenticating Wrangler. Create the Pages project once with `pnpm exec wrangler pages project create frontend-fun`.
