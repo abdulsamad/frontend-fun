@@ -18,6 +18,15 @@ root.render(
 	</StrictMode>,
 );
 
+let reloadingForUpdate = false;
+if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+	navigator.serviceWorker.addEventListener('controllerchange', () => {
+		if (reloadingForUpdate) return;
+		reloadingForUpdate = true;
+		window.location.reload();
+	});
+}
+
 serviceWorkerRegistration.register({
 	onSuccess: () =>
 		toast.dark(
@@ -31,4 +40,9 @@ serviceWorkerRegistration.register({
 				<span>Workbench is available offline.</span>
 			</div>,
 		),
+	onUpdate: (registration) => {
+		const waitingWorker = registration.waiting;
+		if (!waitingWorker) return;
+		waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+	},
 });

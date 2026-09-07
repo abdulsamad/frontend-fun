@@ -1,11 +1,9 @@
 // This optional code is used to register a service worker.
 // register() is not called by default.
 
-// This lets the app load faster on subsequent visits in production, and gives
-// it offline capabilities. However, it also means that developers (and users)
-// will only see deployed updates on subsequent visits to a page, after all the
-// existing tabs open on the page have been closed, since previously cached
-// resources are updated in the background.
+// This lets the app load faster on subsequent visits in production and gives
+// it offline capabilities. Updated workers are activated by the application
+// as soon as their new precache is ready.
 
 // The Vite PWA plugin builds the service worker during production builds.
 
@@ -57,8 +55,19 @@ export function register(config?: Config) {
 
 function registerValidSW(swUrl: string, config?: Config) {
   navigator.serviceWorker
-    .register(swUrl)
+    .register(swUrl, { updateViaCache: 'none' })
     .then((registration) => {
+      let updateReported = false;
+      const reportUpdate = () => {
+        if (updateReported || !navigator.serviceWorker.controller) return;
+        updateReported = true;
+        config?.onUpdate?.(registration);
+      };
+
+      // A worker may already be waiting if the previous page load found an
+      // update but closed before it could be activated.
+      if (registration.waiting) reportUpdate();
+
       registration.onupdatefound = () => {
         const installingWorker = registration.installing;
         if (installingWorker == null) {
@@ -67,18 +76,9 @@ function registerValidSW(swUrl: string, config?: Config) {
         installingWorker.onstatechange = () => {
           if (installingWorker.state === 'installed') {
             if (navigator.serviceWorker.controller) {
-              // At this point, the updated precached content has been fetched,
-              // but the previous service worker will still serve the older
-              // content until all client tabs are closed.
-              console.log(
-                'New content is available and will be used when all ' +
-                  'tabs for this page are closed.'
-              );
+              console.log('New content is available and is being activated.');
 
-              // Execute callback
-              if (config && config.onUpdate) {
-                config.onUpdate(registration);
-              }
+              reportUpdate();
             } else {
               // At this point, everything has been precached.
               // It's the perfect time to display a
@@ -93,6 +93,14 @@ function registerValidSW(swUrl: string, config?: Config) {
           }
         };
       };
+
+      // Explicitly check on every load. updateViaCache prevents an HTTP or CDN
+      // cache from hiding a newly deployed service worker script.
+      if (navigator.serviceWorker.controller) {
+        void registration.update().catch((error) => {
+          console.warn('Service worker update check failed:', error);
+        });
+      }
     })
     .catch((error) => {
       console.error('Error during service worker registration:', error);
@@ -102,6 +110,7 @@ function registerValidSW(swUrl: string, config?: Config) {
 function checkValidServiceWorker(swUrl: string, config?: Config) {
   // Check if the service worker can be found. If it can't reload the page.
   fetch(swUrl, {
+    cache: 'no-store',
     headers: { 'Service-Worker': 'script' },
   })
     .then((response) => {

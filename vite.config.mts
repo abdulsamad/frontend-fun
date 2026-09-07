@@ -10,6 +10,7 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'service-worker.ts',
       registerType: 'prompt',
+      injectRegister: null,
       injectManifest: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,ttf,json}'],
       },
