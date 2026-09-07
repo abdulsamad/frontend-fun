@@ -19,12 +19,16 @@ import PreviewPane from './Output';
 import {
   ConsoleRow,
   ConsoleJson,
+  ConsoleJsonChildren,
+  ConsoleJsonLeaf,
+  ConsoleJsonMeta,
   ConsoleValues,
   DevtoolsClear,
   DevtoolsContent,
   DevtoolsEmpty,
   DevtoolsHeader,
   DevtoolsPanel,
+  DevtoolsResizeHandle,
   DevtoolsTab,
   DevtoolsTabs,
   DevtoolsToggle,
@@ -67,16 +71,34 @@ const appendDiagnostic = (current: PreviewError[], diagnostic: PreviewError) => 
   return [...current, diagnostic].slice(-MAX_ERROR_ENTRIES);
 };
 
+type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+
+const jsonSummary = (value: JsonValue) => {
+  if (Array.isArray(value)) return `Array(${value.length})`;
+  if (value && typeof value === 'object') return `Object {${Object.keys(value).length}}`;
+  return String(value);
+};
+
+const JsonNode = ({ label, value }: { label: string; value: JsonValue }) => {
+  if (Array.isArray(value) || (value !== null && typeof value === 'object')) {
+    const entries = Array.isArray(value)
+      ? value.map((child, index) => [String(index), child] as const)
+      : Object.entries(value);
+    return (
+      <ConsoleJson>
+        <summary><strong>{label}</strong> <ConsoleJsonMeta>{jsonSummary(value)}</ConsoleJsonMeta></summary>
+        <ConsoleJsonChildren>{entries.map(([key, child]) => <JsonNode key={key} label={key} value={child} />)}</ConsoleJsonChildren>
+      </ConsoleJson>
+    );
+  }
+  const type = value === null ? 'null' : typeof value;
+  return <ConsoleJsonLeaf data-type={type}><span>{label}</span><span>{typeof value === 'string' ? JSON.stringify(value) : String(value)}</span></ConsoleJsonLeaf>;
+};
+
 const ConsoleValue = ({ type, value }: PreviewConsoleValue) => {
   if (type !== 'json') return <span>{value}</span>;
   try {
-    const parsed = JSON.parse(value) as unknown;
-    const summary = Array.isArray(parsed)
-      ? `Array(${parsed.length})`
-      : parsed && typeof parsed === 'object'
-        ? `Object {${Object.keys(parsed).length}}`
-        : String(parsed);
-    return <ConsoleJson><summary>{summary}</summary><pre>{JSON.stringify(parsed, null, 2)}</pre></ConsoleJson>;
+    return <JsonNode label='value' value={JSON.parse(value) as JsonValue} />;
   } catch {
     return <span>{value}</span>;
   }
@@ -103,6 +125,7 @@ const Preview = () => {
   const [networkEntries, setNetworkEntries] = useState<PreviewNetworkEntry[]>([]);
   const [activeDevtoolsView, setActiveDevtoolsView] = useState<DevtoolsView>('console');
   const [isDevtoolsCollapsed, setIsDevtoolsCollapsed] = useState(false);
+  const [devtoolsHeight, setDevtoolsHeight] = useState(190);
   const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [messageListenerReady, setMessageListenerReady] = useState(false);
@@ -261,6 +284,31 @@ const Preview = () => {
     errors: diagnostics.length,
   };
 
+  const resizeDevtools = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (isDevtoolsCollapsed) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const startY = event.clientY;
+    const startHeight = devtoolsHeight;
+    const handleMove = (moveEvent: PointerEvent) => {
+      const maxHeight = Math.max(180, Math.floor((previewPaneRef.current?.clientHeight || 560) * 0.8));
+      const nextHeight = Math.min(maxHeight, Math.max(118, startHeight + startY - moveEvent.clientY));
+      setDevtoolsHeight(nextHeight);
+    };
+    const handleUp = () => {
+      window.removeEventListener('pointermove', handleMove);
+      window.removeEventListener('pointerup', handleUp);
+    };
+    window.addEventListener('pointermove', handleMove);
+    window.addEventListener('pointerup', handleUp, { once: true });
+  };
+
+  const resizeDevtoolsWithKeyboard = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    const delta = event.key === 'ArrowUp' ? 20 : -20;
+    setDevtoolsHeight((height) => Math.min(600, Math.max(118, height + delta)));
+  };
+
   return (
     <PreviewPane ref={previewPaneRef} id='output' aria-label='Live preview'>
       <PreviewToolbar>
@@ -310,7 +358,19 @@ const Preview = () => {
           />
         )}
       </PreviewViewport>
-      <DevtoolsPanel $collapsed={isDevtoolsCollapsed} aria-label='Preview developer tools'>
+      <DevtoolsPanel $collapsed={isDevtoolsCollapsed} $height={devtoolsHeight} aria-label='Preview developer tools'>
+        <DevtoolsResizeHandle
+          $collapsed={isDevtoolsCollapsed}
+          role='separator'
+          aria-orientation='horizontal'
+          aria-label='Resize preview console'
+          aria-valuemin={118}
+          aria-valuemax={600}
+          aria-valuenow={devtoolsHeight}
+          tabIndex={0}
+          onPointerDown={resizeDevtools}
+          onKeyDown={resizeDevtoolsWithKeyboard}
+        />
         <DevtoolsHeader>
           <DevtoolsTabs role='tablist' aria-label='Preview logs'>
             {(['console', 'network', 'errors'] as DevtoolsView[]).map((view) => (

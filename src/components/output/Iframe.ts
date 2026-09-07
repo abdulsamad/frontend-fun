@@ -21,14 +21,35 @@ export const PreviewFrame = styled.iframe<{ $deviceWidth?: number }>`
   box-shadow: ${({ $deviceWidth }) => ($deviceWidth ? '0 8px 24px rgba(0, 0, 0, 0.28)' : 'none')};
 `;
 
-export const DevtoolsPanel = styled.section<{ $collapsed: boolean }>`
+export const DevtoolsPanel = styled.section<{ $collapsed: boolean; $height: number }>`
   display: flex;
-  flex: ${({ $collapsed }) => ($collapsed ? '0 0 34px' : '0 0 min(32%, 190px)')};
+  flex: ${({ $collapsed, $height }) => ($collapsed ? '0 0 34px' : `0 0 ${$height}px`)};
   flex-direction: column;
   min-block-size: ${({ $collapsed }) => ($collapsed ? '34px' : '118px')};
   border-block-start: 1px solid var(--workbench-border);
   background: var(--workbench-editor);
   color: var(--workbench-text);
+`;
+
+export const DevtoolsResizeHandle = styled.div<{ $collapsed: boolean }>`
+  display: ${({ $collapsed }) => ($collapsed ? 'none' : 'block')};
+  flex: 0 0 7px;
+  cursor: ns-resize;
+  touch-action: none;
+  background: transparent;
+
+  &::after {
+    content: '';
+    display: block;
+    inline-size: 42px;
+    block-size: 2px;
+    margin: 2px auto 0;
+    border-radius: 2px;
+    background: var(--workbench-border);
+  }
+
+  &:hover::after, &:focus-visible::after { background: var(--workbench-focus); }
+  &:focus-visible { outline: 1px solid var(--workbench-focus); outline-offset: -1px; }
 `;
 
 export const DevtoolsHeader = styled.header`
@@ -145,17 +166,32 @@ export const ConsoleJson = styled.details`
     overflow-wrap: anywhere;
   }
 
-  pre {
-    max-inline-size: 100%;
-    margin: 5px 0 2px;
-    padding: 7px 9px;
-    overflow: auto;
-    border-inline-start: 2px solid var(--workbench-border);
-    color: var(--workbench-text);
-    font: inherit;
-    line-height: 1.45;
-    white-space: pre;
-  }
+`;
+
+export const ConsoleJsonChildren = styled.div`
+  display: grid;
+  gap: 2px;
+  margin: 4px 0 2px 9px;
+  padding-inline-start: 9px;
+  border-inline-start: 2px solid var(--workbench-border);
+`;
+
+export const ConsoleJsonLeaf = styled.div`
+  display: flex;
+  gap: 6px;
+  min-inline-size: 0;
+  line-height: 1.45;
+
+  > span:first-child { color: #9cdcfe; }
+  > span:last-child { overflow-wrap: anywhere; }
+  &[data-type='string'] > span:last-child { color: #ce9178; }
+  &[data-type='number'] > span:last-child,
+  &[data-type='boolean'] > span:last-child { color: #b5cea8; }
+  &[data-type='null'] > span:last-child { color: var(--workbench-muted); }
+`;
+
+export const ConsoleJsonMeta = styled.span`
+  color: var(--workbench-muted);
 `;
 
 export const NetworkRow = styled.li`
