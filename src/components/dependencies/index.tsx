@@ -4,10 +4,9 @@ import styled from 'styled-components';
 
 import { projectDependenciesAtom } from '../../state/projectAtoms';
 import { PreviewDependencyType } from '../../state/types';
+import { PopoverDetails, PopoverPanel } from '../../styles/Popover';
 
-const Panel = styled.details`
-  position: relative;
-
+const Panel = styled(PopoverDetails)`
   summary { box-sizing: border-box; display: flex; align-items: center; justify-content: center; block-size: 28px; padding-inline: 8px; border-radius: 3px; color: var(--workbench-muted); cursor: pointer; font-size: 0.75rem; line-height: 1; list-style: none; }
   summary::-webkit-details-marker { display: none; }
   summary:hover { background: var(--workbench-hover); color: var(--workbench-text); }
@@ -19,7 +18,7 @@ const Panel = styled.details`
   }
 `;
 
-const Content = styled.div`
+const Content = styled(PopoverPanel).attrs({ $origin: 'top right' })`
   position: fixed;
   z-index: 20;
   inset-block-start: 36px;

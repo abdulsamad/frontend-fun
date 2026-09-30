@@ -22,6 +22,7 @@ const GlobalStyle = createGlobalStyle`
     --workbench-focus: #0078d4;
     --workbench-danger: #f14c4c;
     --workbench-success: #4ec9b0;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --font-interface: 'Segoe WPC', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-code: 'Fira Code', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
   }

@@ -164,9 +164,44 @@ export const WorkbenchDialog = styled.dialog`
   background: var(--workbench-elevated);
   color: var(--workbench-text);
   box-shadow: 0 16px 48px rgb(0 0 0 / 55%);
+  opacity: 0;
+  transform: scale(0.96);
+  transform-origin: center;
+  transition:
+    opacity 250ms var(--ease-out),
+    transform 250ms var(--ease-out),
+    display 250ms allow-discrete,
+    overlay 250ms allow-discrete;
+
+  &[open] {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  @starting-style {
+    &[open] {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+  }
 
   &::backdrop {
     background: rgb(0 0 0 / 55%);
+    opacity: 0;
+    transition:
+      opacity 250ms var(--ease-out),
+      display 250ms allow-discrete,
+      overlay 250ms allow-discrete;
+  }
+
+  &[open]::backdrop {
+    opacity: 1;
+  }
+
+  @starting-style {
+    &[open]::backdrop {
+      opacity: 0;
+    }
   }
 
   form {
@@ -205,6 +240,26 @@ export const WorkbenchDialog = styled.dialog`
     &:focus {
       border-color: var(--workbench-focus);
       outline: 1px solid var(--workbench-focus);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transform: none;
+    transition-duration: 160ms !important;
+
+    &[open] {
+      transform: none;
+    }
+
+    &::backdrop {
+      transition-duration: 160ms !important;
+    }
+
+    @starting-style {
+      &[open] {
+        opacity: 0;
+        transform: none;
+      }
     }
   }
 `;

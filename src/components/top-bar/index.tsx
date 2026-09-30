@@ -17,6 +17,7 @@ import { defaultWorkbenchSettings, workbenchSettingsAtom } from '../../state/set
 import { isValidProjectName, validateDependencies, validateFiles } from '../../state/validation';
 import { createZipBlob } from '../../utils/createZip';
 import { WorkbenchTopBar } from '../../styles/GlobalContainer';
+import { PopoverDetails, PopoverPanel } from '../../styles/Popover';
 import Dependencies from '../dependencies';
 import { DialogActions, DialogButton, DialogError, WorkbenchDialog } from '../sidebar/Files';
 
@@ -76,9 +77,7 @@ const Controls = styled.div`
   }
 `;
 
-const Menu = styled.details`
-  position: relative;
-
+const Menu = styled(PopoverDetails)`
   > summary {
     box-sizing: border-box;
     display: flex;
@@ -107,7 +106,7 @@ const Menu = styled.details`
   }
 `;
 
-const ProjectMenuPanel = styled.div`
+const ProjectMenuPanel = styled(PopoverPanel).attrs({ $origin: 'top left' })`
   position: absolute;
   z-index: 30;
   inset-block-start: 34px;
@@ -139,7 +138,7 @@ const ProjectMenuPanel = styled.div`
   hr { inline-size: 100%; margin: 4px 0; border: 0; border-block-start: 1px solid var(--workbench-border); }
 `;
 
-const SettingsPanel = styled.div`
+const SettingsPanel = styled(PopoverPanel).attrs({ $origin: 'top right' })`
   position: absolute;
   z-index: 30;
   inset-block-start: 34px;
