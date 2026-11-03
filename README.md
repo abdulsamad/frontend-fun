@@ -4,6 +4,8 @@ Frontend Fun is a browser-based playground for writing, previewing, and sharing 
 
 [![Deploy to Cloudflare Pages](https://img.shields.io/badge/deploy-Cloudflare%20Pages-orange)](https://pages.cloudflare.com/)
 
+![Frontend fun screenshot](/readme/screenshot.png "Frontend fun screenshot")
+
 ## Features
 
 - VS Code-style Explorer, editor tabs, status bar, terminal, and resizable panes
@@ -80,7 +82,3 @@ pnpm install
 ## Development
 
 Use `pnpm dev` for the Vite-only development server. Use `pnpm pages:dev` on port 3000 to build and run the Pages Functions locally when testing Save and Share. Deploy with `pnpm pages:deploy` after authenticating Wrangler. Create the Pages project once with `pnpm exec wrangler pages project create frontend-fun`.
-
-## Screenshot
-
-![Frontend fun screenshot](/readme/screenshot.png "Frontend fun screenshot")
